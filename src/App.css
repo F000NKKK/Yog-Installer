@@ -83,8 +83,15 @@ body,
   flex: 1;
 }
 
+.yi-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
 .yi-products {
   flex: 1;
+  min-width: 0;
   overflow: auto;
   padding: var(--sp-space-lg);
   display: flex;
@@ -99,7 +106,6 @@ body,
   background: var(--sp-surface-1);
   border: 1px solid var(--sp-border);
   border-radius: var(--sp-radius-md);
-  max-width: 900px;
 }
 
 .yi-card-icon {
@@ -231,4 +237,88 @@ body,
   border-top: 1px solid var(--sp-border);
   color: var(--sp-text-muted);
   font-size: var(--sp-font-size-sm);
+}
+
+/* The right column: the developer news and where to get help, as VS Installer's. */
+.yi-news {
+  width: 300px;
+  flex: none;
+  overflow: auto;
+  padding: var(--sp-space-lg);
+  border-left: 1px solid var(--sp-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-xs);
+}
+
+.yi-news h2 {
+  margin: 0 0 var(--sp-space-xs);
+  font-size: 1.05em;
+  font-weight: 600;
+}
+
+.yi-news-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-2xs);
+  padding: var(--sp-space-xs) 0;
+  border-bottom: 1px solid var(--sp-border);
+}
+
+.yi-news-title {
+  text-align: left;
+  font-weight: 600;
+}
+
+.yi-news-meta {
+  font-size: var(--sp-font-size-sm);
+}
+
+.yi-news h2.yi-help-heading {
+  margin-top: var(--sp-space-lg);
+}
+
+.yi-help-link {
+  padding: var(--sp-space-2xs) 0;
+}
+
+/* The notifications, under their bell. */
+.yi-flyout {
+  position: absolute;
+  top: calc(100% + var(--sp-space-xs));
+  right: 0;
+  z-index: 20;
+  width: 360px;
+  max-height: 420px;
+  overflow: auto;
+  padding: var(--sp-space-md);
+  background: var(--sp-surface-2);
+  border: 1px solid var(--sp-border-strong);
+  border-radius: var(--sp-radius-md);
+  box-shadow: var(--sp-shadow-md);
+}
+
+.yi-flyout h3 {
+  margin: 0 0 var(--sp-space-sm);
+  font-size: 1em;
+}
+
+.yi-flyout-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-space-sm);
+  padding: var(--sp-space-xs) 0;
+  border-top: 1px solid var(--sp-border);
+  font-size: var(--sp-font-size-sm);
+  word-break: break-word;
+}
+
+.yi-flyout-item span {
+  flex: 1;
+}
+
+.yi-flyout-icon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--sp-warning);
 }

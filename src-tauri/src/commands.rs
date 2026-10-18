@@ -1,6 +1,7 @@
 //! The window's commands: what it shows, what a selection changes, and the
 //! operations — install, modify, update, uninstall, launch, update the Installer.
 
+use crate::pending::{self, Pending};
 use crate::state::AppState;
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
@@ -11,8 +12,9 @@ use yog_installer_core::compat::Conflict;
 use yog_installer_core::detect::{RealSystem, cargo_bin};
 use yog_installer_core::engine::{self, Mode, Plan};
 use yog_installer_core::install::Context;
+use yog_installer_core::latest::News;
 use yog_installer_core::overview::{self, ComponentView, ProductView};
-use yog_installer_core::progress::Event;
+use yog_installer_core::progress::{CANCELLED, Event};
 use yog_installer_core::releases;
 use yog_installer_core::selection::{self, Change, Selection, Why};
 use yog_installer_core::selfupdate::{self, Then};
@@ -37,6 +39,9 @@ pub struct Snapshot {
     /// Each product's workloads.
     product_workloads: Vec<(String, Vec<String>)>,
     installer_update: Option<String>,
+    /// An install or modify that didn't end, when none is running.
+    pending: Option<Pending>,
+    news: Vec<News>,
     problems: Vec<String>,
 }
 
@@ -80,10 +85,7 @@ pub async fn snapshot(
         }
         let catalog = state.catalog();
         let (latest, installed) = (state.latest(), state.installed()?);
-        let installer_update = selfupdate::check(&catalog, &version)
-            .ok()
-            .flatten()
-            .map(|r| r.version);
+        let installer_update = selfupdate::newer(&latest, &version).map(|r| r.version.clone());
         Ok(Snapshot {
             home: state.home()?.root().display().to_string(),
             cache: state.home()?.cache_dir().display().to_string(),
@@ -97,7 +99,26 @@ pub async fn snapshot(
             groups: catalog.groups,
             workloads: catalog.workloads,
             installer_update,
-            problems: state.problems.lock().expect("problems lock").clone(),
+            pending: if state.running.lock().expect("running lock").is_some() {
+                None
+            } else {
+                pending::read(state.home()?)
+            },
+            news: state.news.lock().expect("news lock").clone(),
+            problems: {
+                let notices = state.notices.lock().expect("notices lock").clone();
+                notices
+                    .into_iter()
+                    .chain(
+                        state
+                            .problems
+                            .lock()
+                            .expect("problems lock")
+                            .iter()
+                            .cloned(),
+                    )
+                    .collect()
+            },
             version,
         })
     })
@@ -164,9 +185,13 @@ fn run(
     plan: Plan,
     mode: Mode,
     keep_downloads: bool,
+    journal: Option<Pending>,
 ) -> Result<(), String> {
     let home = state.home()?.clone();
     let cancel = state.start()?;
+    if let Some(pending) = &journal {
+        pending::write(&home, pending)?;
+    }
     std::thread::spawn(move || {
         let sink = |event: Event| {
             let _ = app.emit(
@@ -183,8 +208,12 @@ fn run(
             sink: &sink,
             cargo_bin: cargo_bin(&RealSystem),
         };
-        // The outcome reaches the window as the `finished` event.
-        let _ = engine::apply(&state.catalog(), &plan, mode, keep_downloads, &ctx);
+        // The outcome reaches the window as the `finished` event; the journal
+        // stays for a failure (to go on with), not for a success or a cancel.
+        let outcome = engine::apply(&state.catalog(), &plan, mode, keep_downloads, &ctx);
+        if journal.is_some() && outcome.as_ref().map_or_else(|e| e == CANCELLED, |_| true) {
+            pending::clear(&home);
+        }
         state.finish();
     });
     Ok(())
@@ -203,9 +232,50 @@ pub async fn apply(
     let state = Arc::clone(&state);
     blocking(move || {
         let plan = plan_of(&state, &product, &selection)?;
-        run(app, state, product, plan, mode, keep_downloads)
+        let journal = Pending {
+            product: product.clone(),
+            selection,
+            mode,
+            keep_downloads,
+        };
+        run(
+            app,
+            state,
+            product,
+            plan,
+            mode,
+            keep_downloads,
+            Some(journal),
+        )
     })
     .await
+}
+
+/// Goes on with the install or modify that didn't end (see `pending`).
+#[tauri::command]
+pub async fn resume(app: AppHandle, state: Shared<'_>) -> Result<(), String> {
+    let state = Arc::clone(&state);
+    blocking(move || {
+        let p = pending::read(state.home()?).ok_or("nothing to go on with")?;
+        let plan = plan_of(&state, &p.product, &p.selection)?;
+        run(
+            app,
+            state,
+            p.product.clone(),
+            plan,
+            p.mode,
+            p.keep_downloads,
+            Some(p),
+        )
+    })
+    .await
+}
+
+/// Forgets the install or modify that didn't end.
+#[tauri::command]
+pub fn forget_pending(state: Shared<'_>) -> Result<(), String> {
+    pending::clear(state.home()?);
+    Ok(())
 }
 
 /// Installs `product`'s installed version again, over itself.
@@ -242,6 +312,7 @@ pub async fn repair(app: AppHandle, state: Shared<'_>, product: String) -> Resul
             },
             Mode::default(),
             false,
+            None,
         )
     })
     .await
@@ -271,6 +342,7 @@ pub async fn uninstall(app: AppHandle, state: Shared<'_>, product: String) -> Re
             },
             Mode::default(),
             false,
+            None,
         )
     })
     .await
@@ -300,12 +372,20 @@ pub fn launch(state: Shared<'_>, product: String) -> Result<(), String> {
         .find(|f| f.id == product)
         .and_then(|f| f.path.clone())
         .ok_or("it isn't installed")?;
+    start(&program)
+}
+
+/// macOS opens an application bundle; elsewhere a program runs itself.
+const MAC_OPEN: &str = "open";
+
+/// Starts `program` (a macOS `.app` through `open`).
+pub fn start(program: &std::path::Path) -> Result<(), String> {
     let mut cmd = if cfg!(target_os = "macos") {
-        let mut open = std::process::Command::new("open");
-        open.arg(&program);
+        let mut open = std::process::Command::new(MAC_OPEN);
+        open.arg(program);
         open
     } else {
-        std::process::Command::new(&program)
+        std::process::Command::new(program)
     };
     cmd.spawn()
         .map(|_| ())
@@ -319,8 +399,10 @@ pub async fn self_update(app: AppHandle, state: Shared<'_>) -> Result<(), String
     let version = app.package_info().version.to_string();
     blocking(move || {
         let catalog = state.catalog();
-        let release =
-            selfupdate::check(&catalog, &version)?.ok_or("the Installer is up to date")?;
+        let latest = state.latest();
+        let release = selfupdate::newer(&latest, &version)
+            .ok_or("the Installer is up to date")?
+            .clone();
         let cancel = state.start()?;
         let product = catalog
             .installer
@@ -346,9 +428,7 @@ pub async fn self_update(app: AppHandle, state: Shared<'_>) -> Result<(), String
         state.finish();
         match then? {
             Then::Restart(program) => {
-                std::process::Command::new(&program)
-                    .spawn()
-                    .map_err(|e| format!("{}: {e}", program.display()))?;
+                start(&program)?;
                 app.exit(0);
             }
             Then::Quit => app.exit(0),

@@ -2,7 +2,7 @@
 //! targets, `cargo install`ed tools. rustup itself is fetched when missing.
 
 use super::{Context, run};
-use crate::{http, platform};
+use crate::platform;
 use std::path::PathBuf;
 
 /// rustup-init for a host triple.
@@ -25,7 +25,7 @@ fn rustup(id: &str, ctx: &Context) -> Result<PathBuf, String> {
     }
     let host = platform::rustup_host().ok_or("Rust has no toolchain for this platform")?;
     let init = ctx.home.cache_dir().join(platform::exe("rustup-init"));
-    http::download(&rustup_init_url(host), &init, None, ctx.cancel, &|_, _| {})?;
+    crate::download::download(&rustup_init_url(host), &init, None, ctx.cancel, &|_, _| {})?;
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;

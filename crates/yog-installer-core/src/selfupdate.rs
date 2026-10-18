@@ -5,22 +5,21 @@
 use crate::catalog::Catalog;
 use crate::install::archive::{self, Kind};
 use crate::progress::Cancel;
-use crate::releases::{self, Release};
-use crate::{compat, http, platform};
+use crate::releases::Release;
+use crate::selfinstall::APPIMAGE_ENV;
+use crate::{compat, platform};
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use yog_home::components::id::INSTALLER;
 
-/// The variable an AppImage is told its own path in.
-const APPIMAGE_ENV: &str = "APPIMAGE";
 /// A Windows (NSIS) setup's silent switch.
 const NSIS_SILENT: &str = "/S";
 
-/// A newer Installer than `current`, if one is out.
-pub fn check(catalog: &Catalog, current: &str) -> Result<Option<Release>, String> {
-    let Some(installer) = &catalog.installer else {
-        return Ok(None);
-    };
-    let latest = releases::of(&installer.source)?.into_iter().next();
-    Ok(latest.filter(|r| compat::compare(&r.version, current).is_gt()))
+/// The newest Installer in `newest` (`latest::fetch`), if it's newer than `current`.
+pub fn newer<'r>(newest: &'r BTreeMap<String, Release>, current: &str) -> Option<&'r Release> {
+    newest
+        .get(INSTALLER)
+        .filter(|r| compat::compare(&r.version, current).is_gt())
 }
 
 /// What to do once the new version is in place.
@@ -53,7 +52,7 @@ pub fn apply(
         .asset_ending(suffix)
         .ok_or("the release has no Installer for this platform")?;
     let download = cache.join(&asset.name);
-    http::download(
+    crate::download::download(
         &asset.url,
         &download,
         asset.sha256.as_deref(),

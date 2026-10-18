@@ -1,139 +1,156 @@
-//! HTTPS: JSON from APIs, files with progress, verified and cancellable.
+//! HTTPS: JSON and text from APIs (GitHub's cached, with its token when
+//! there is one). Files are [`crate::download`]'s.
 
-use crate::progress::Cancel;
 use serde::de::DeserializeOwned;
 use sha2::{Digest, Sha256};
-use std::io::{Read, Seek, SeekFrom, Write};
-use std::path::Path;
+use std::path::PathBuf;
 use std::sync::OnceLock;
 
 /// How the Installer introduces itself (GitHub's API wants one).
 const USER_AGENT: &str = concat!("yog-installer/", env!("CARGO_PKG_VERSION"));
-/// HTTP's answer to a `Range` request it honors.
-const PARTIAL_CONTENT: u16 = 206;
-/// Bytes read between progress reports and cancel checks.
-const CHUNK: usize = 64 * 1024;
 /// GitHub's REST API, and the media type it answers in.
 const GITHUB_API: &str = "https://api.github.com/";
 const GITHUB_JSON: &str = "application/vnd.github+json";
 
-fn agent() -> &'static ureq::Agent {
+/// GitHub's answers that mean "too many requests": a stale answer is better then.
+const RATE_LIMITED: [u16; 2] = [403, 429];
+const NOT_MODIFIED: u16 = 304;
+/// Where answers of GitHub's API are kept (with their ETags), under the cache.
+const HTTP_CACHE: &str = "http";
+
+pub(crate) fn agent() -> &'static ureq::Agent {
     static AGENT: OnceLock<ureq::Agent> = OnceLock::new();
     AGENT.get_or_init(|| {
         ureq::Agent::config_builder()
             .user_agent(USER_AGENT)
+            // Statuses are read, not raised: 304 and a rate limit are answers.
+            .http_status_as_error(false)
             .build()
             .into()
     })
 }
 
+/// Where API answers are cached; set once by the app (`Home::cache_dir`).
+static CACHE: OnceLock<PathBuf> = OnceLock::new();
+
+/// Keeps API answers under `dir`, so a repeated question costs nothing (a
+/// `304` isn't counted against GitHub's limit) and a rate limit isn't an error.
+pub fn set_cache(dir: PathBuf) {
+    let _ = CACHE.set(dir.join(HTTP_CACHE));
+}
+
+/// A GitHub token, when this machine has one: `GITHUB_TOKEN`, else the GitHub
+/// CLI's (`gh auth token`). It lifts the limit from 60 requests an hour to 5000.
+fn github_token() -> Option<&'static str> {
+    static TOKEN: OnceLock<Option<String>> = OnceLock::new();
+    TOKEN
+        .get_or_init(|| {
+            std::env::var("GITHUB_TOKEN")
+                .ok()
+                .filter(|t| !t.is_empty())
+                .or_else(|| {
+                    let out = std::process::Command::new(crate::platform::exe("gh"))
+                        .args(["auth", "token"])
+                        .output()
+                        .ok()?;
+                    let token = String::from_utf8(out.stdout).ok()?.trim().to_string();
+                    (out.status.success() && !token.is_empty()).then_some(token)
+                })
+        })
+        .as_deref()
+}
+
+/// A cached answer: its ETag and its body.
+#[derive(serde::Serialize, serde::Deserialize)]
+struct Cached {
+    etag: Option<String>,
+    body: String,
+}
+
+fn cache_file(url: &str) -> Option<PathBuf> {
+    Some(
+        CACHE
+            .get()?
+            .join(format!("{}.json", hex(&Sha256::digest(url.as_bytes())))),
+    )
+}
+
 /// `url`'s JSON.
 pub fn get_json<T: DeserializeOwned>(url: &str) -> Result<T, String> {
-    let mut req = agent().get(url);
-    if url.starts_with(GITHUB_API) {
-        req = req.header("Accept", GITHUB_JSON);
-        // A token lifts GitHub's limit of 60 requests an hour, when there is one.
-        if let Ok(token) = std::env::var("GITHUB_TOKEN") {
-            req = req.header("Authorization", &format!("Bearer {token}"));
-        }
+    let text = if url.starts_with(GITHUB_API) {
+        github(url)?
+    } else {
+        get_text(url)?
+    };
+    serde_json::from_str(&text).map_err(|e| format!("{url}: {e}"))
+}
+
+/// A GitHub API answer: asked again only if it changed, the cached one when rate-limited.
+fn github(url: &str) -> Result<String, String> {
+    let file = cache_file(url);
+    let cached: Option<Cached> = file
+        .as_ref()
+        .and_then(|f| std::fs::read_to_string(f).ok())
+        .and_then(|t| serde_json::from_str(&t).ok());
+    let mut req = agent().get(url).header("Accept", GITHUB_JSON);
+    if let Some(token) = github_token() {
+        req = req.header("Authorization", &format!("Bearer {token}"));
+    }
+    if let Some(etag) = cached.as_ref().and_then(|c| c.etag.as_deref()) {
+        req = req.header("If-None-Match", etag);
     }
     let mut resp = req.call().map_err(|e| format!("{url}: {e}"))?;
-    resp.body_mut()
-        .read_json()
-        .map_err(|e| format!("{url}: {e}"))
+    let status = resp.status().as_u16();
+    match cached {
+        Some(c) if status == NOT_MODIFIED || RATE_LIMITED.contains(&status) => return Ok(c.body),
+        _ => {}
+    }
+    if !resp.status().is_success() {
+        return Err(format!("{url}: {}", resp.status()));
+    }
+    let etag = resp
+        .headers()
+        .get("etag")
+        .and_then(|v| v.to_str().ok())
+        .map(str::to_string);
+    let body = resp
+        .body_mut()
+        .read_to_string()
+        .map_err(|e| format!("{url}: {e}"))?;
+    if let Some(file) = file {
+        let _ = std::fs::create_dir_all(file.parent().unwrap_or(&file));
+        let _ = serde_json::to_string(&Cached {
+            etag,
+            body: body.clone(),
+        })
+        .map(|t| std::fs::write(file, t));
+    }
+    Ok(body)
+}
+
+/// A response that has to have succeeded.
+pub(crate) fn ok(
+    url: &str,
+    resp: ureq::http::Response<ureq::Body>,
+) -> Result<ureq::http::Response<ureq::Body>, String> {
+    if resp.status().is_success() {
+        Ok(resp)
+    } else {
+        Err(format!("{url}: {}", resp.status()))
+    }
 }
 
 /// `url`'s text.
 pub fn get_text(url: &str) -> Result<String, String> {
-    let mut resp = agent().get(url).call().map_err(|e| format!("{url}: {e}"))?;
+    let mut resp = ok(
+        url,
+        agent().get(url).call().map_err(|e| format!("{url}: {e}"))?,
+    )?;
     resp.body_mut()
         .read_to_string()
         .map_err(|e| format!("{url}: {e}"))
 }
 
-/// Downloads `url` to `dest`, telling `progress(done, total)` as it goes; when
-/// `sha256` is given (hex), the file must have it. A partial file is removed.
-pub fn download(
-    url: &str,
-    dest: &Path,
-    sha256: Option<&str>,
-    cancel: &Cancel,
-    progress: &dyn Fn(u64, Option<u64>),
-) -> Result<(), String> {
-    let result = fetch(url, dest, sha256, cancel, progress);
-    if result.is_err() {
-        let _ = std::fs::remove_file(dest);
-    }
-    result
-}
-
-fn fetch(
-    url: &str,
-    dest: &Path,
-    sha256: Option<&str>,
-    cancel: &Cancel,
-    progress: &dyn Fn(u64, Option<u64>),
-) -> Result<(), String> {
-    if let Some(dir) = dest.parent() {
-        std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
-    }
-    let at = |e: std::io::Error| format!("{}: {e}", dest.display());
-    let mut file = std::fs::File::create(dest).map_err(at)?;
-    let mut hash = Sha256::new();
-    let mut buf = vec![0u8; CHUNK];
-    let (mut done, mut total) = (0u64, None);
-    // One connection per stretch between pauses: a pause closes it, so the
-    // download really stops; going on asks for the rest (`Range`).
-    loop {
-        cancel.check()?;
-        let mut req = agent().get(url);
-        if done > 0 {
-            req = req.header("Range", &format!("bytes={done}-"));
-        }
-        let resp = req.call().map_err(|e| format!("{url}: {e}"))?;
-        if done > 0 && resp.status().as_u16() != PARTIAL_CONTENT {
-            // The server can't send the rest: the whole file again.
-            file.set_len(0).map_err(at)?;
-            file.seek(SeekFrom::Start(0)).map_err(at)?;
-            (hash, done) = (Sha256::new(), 0);
-        }
-        let length: Option<u64> = resp
-            .headers()
-            .get("content-length")
-            .and_then(|v| v.to_str().ok())
-            .and_then(|v| v.parse().ok());
-        total = total.or(length.map(|l| l + done));
-        let mut body = resp.into_body().into_reader();
-        loop {
-            if cancel.is_paused() {
-                break;
-            }
-            cancel.check()?;
-            let n = body.read(&mut buf).map_err(|e| format!("{url}: {e}"))?;
-            if n == 0 {
-                return verify(url, hash, sha256);
-            }
-            file.write_all(&buf[..n]).map_err(at)?;
-            hash.update(&buf[..n]);
-            done += n as u64;
-            progress(done, total);
-        }
-    }
-}
-
-/// The finished download's hash against the one it must have.
-fn verify(url: &str, hash: Sha256, sha256: Option<&str>) -> Result<(), String> {
-    let Some(want) = sha256 else { return Ok(()) };
-    let got = hex(&hash.finalize());
-    if got.eq_ignore_ascii_case(want) {
-        Ok(())
-    } else {
-        Err(format!(
-            "{url}: the download is damaged (sha256 {got}, not {want})"
-        ))
-    }
-}
-
-fn hex(bytes: &[u8]) -> String {
+pub(crate) fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }

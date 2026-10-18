@@ -2,15 +2,52 @@
 //! (`yog-installer-core`), through the commands in [`commands`].
 
 mod commands;
+mod pending;
 mod state;
 
 use std::sync::Arc;
+use tauri::Manager;
+use yog_installer_core::selfinstall::{self, Placed};
+
+/// Puts the Installer in its place, as Visual Studio Installer does: from
+/// a download, it copies itself into its place and starts from there. Not a
+/// development build's, which isn't installed anywhere.
+fn place_self(app: &tauri::App) {
+    if cfg!(debug_assertions) {
+        return;
+    }
+    let state = app.state::<Arc<state::AppState>>();
+    let catalog = state.catalog();
+    let Some(installer) = &catalog.installer else {
+        return;
+    };
+    let version = app.package_info().version.to_string();
+    let placed = state
+        .home()
+        .and_then(|home| selfinstall::ensure(home, &installer.name, &installer.program, &version));
+    match placed {
+        Ok(Placed::Moved(program)) => match commands::start(&program) {
+            Ok(()) => app.handle().exit(0),
+            Err(e) => state.notices.lock().expect("notices lock").push(e),
+        },
+        Ok(Placed::Here) => {}
+        Err(e) => state
+            .problems
+            .lock()
+            .expect("problems lock")
+            .push(format!("Yog Installer couldn't install itself: {e}")),
+    }
+}
 
 pub fn run() {
     let state = Arc::new(state::AppState::new());
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .setup(|app| {
+            place_self(app);
+            Ok(())
+        })
         .manage(state)
         .invoke_handler(tauri::generate_handler![
             commands::snapshot,
@@ -19,6 +56,8 @@ pub fn run() {
             commands::apply,
             commands::uninstall,
             commands::repair,
+            commands::resume,
+            commands::forget_pending,
             commands::cancel,
             commands::pause,
             commands::launch,

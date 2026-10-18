@@ -24,7 +24,8 @@ sha2 = "0.11"
 zip = { version = "9", default-features = false, features = ["deflate"] }
 tar = "0.4"
 flate2 = "1"
-xz2 = "0.1"
+# xz (zig's archives) streamed in pure Rust: no C to build on any platform.
+lzma-rust2 = { version = "0.23", default-features = false, features = ["std", "xz"] }
 dirs = "7"
 libc = "0.2"
 

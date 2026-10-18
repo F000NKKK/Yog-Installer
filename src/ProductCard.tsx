@@ -44,11 +44,12 @@ export function ProductCard({ product, op, busy, actions }: { product: Product; 
             <span className="yi-card-update-version">{product.latest}</span>
           </div>
         )}
+        {!installed && product.latest === null && <p className="yi-op-error">{t("Its versions couldn't be read — see the notifications.")}</p>}
         {op && <OperationProgress op={op} onPause={actions.onPause} onDismiss={actions.onDismiss} />}
       </div>
       <div className="yi-card-actions">
         {!installed && (
-          <Button variant="primary" disabled={busy} onClick={actions.onModify}>
+          <Button variant="primary" disabled={busy || product.latest === null} onClick={actions.onModify}>
             {t("Install")}
           </Button>
         )}

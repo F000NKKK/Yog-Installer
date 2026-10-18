@@ -6,41 +6,10 @@ use crate::compat::{self, Conflict, Needs, RELEASE_MANIFEST};
 use crate::detect::Found;
 use crate::engine;
 use crate::install;
-use crate::releases::{self, Release};
+use crate::releases::Release;
 use crate::selection::Change;
 use serde::Serialize;
 use std::collections::BTreeMap;
-
-/// The newest release of every product and component (fetched side by
-/// side), and what couldn't be asked.
-pub fn latest(catalog: &Catalog) -> (BTreeMap<String, Release>, Vec<String>) {
-    let ids = catalog
-        .products
-        .iter()
-        .map(|p| (p.id.clone(), p.source.clone()));
-    let ids = ids.chain(
-        catalog
-            .components
-            .iter()
-            .map(|c| (c.id.clone(), c.source.clone())),
-    );
-    let jobs: Vec<_> = ids
-        .map(|(id, source)| std::thread::spawn(move || (id, releases::of(&source))))
-        .collect();
-    let (mut found, mut problems) = (BTreeMap::new(), Vec::new());
-    for job in jobs {
-        match job.join() {
-            Ok((id, Ok(list))) => {
-                if let Some(newest) = list.into_iter().next() {
-                    found.insert(id, newest);
-                }
-            }
-            Ok((id, Err(e))) => problems.push(format!("{id}: {e}")),
-            Err(_) => problems.push("a version check stopped".into()),
-        }
-    }
-    (found, problems)
-}
 
 /// A product card.
 #[derive(Debug, Clone, Serialize)]
@@ -174,8 +143,13 @@ mod tests {
     #[ignore]
     fn every_source_answers() {
         let catalog = Catalog::built_in();
-        let (latest, problems) = latest(&catalog);
+        let crate::latest::Latest {
+            newest: latest,
+            problems,
+            news,
+        } = crate::latest::fetch(&catalog);
         assert!(problems.is_empty(), "{problems:?}");
+        assert!(!news.is_empty());
         for c in &catalog.components {
             assert!(latest.contains_key(&c.id), "{} has no release", c.id);
         }

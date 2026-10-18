@@ -2130,14 +2130,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
 
 [[package]]
-name = "lzma-sys"
-version = "0.1.20"
+name = "lzma-rust2"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5fda04ab3764e6cde78b9974eec4f779acaba7c4e84b36eca3cf77c581b85d27"
+checksum = "f1c46f3fcd2e888afdb01a07efc071cb21300e07c68d32c3e8b01b5c8cb1fcaa"
 dependencies = [
- "cc",
- "libc",
- "pkg-config",
+ "sha2 0.11.1",
 ]
 
 [[package]]
@@ -5159,15 +5157,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "xz2"
-version = "0.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "388c44dc09d76f1536602ead6d325eb532f5c122f17782bd57fb47baeeb767e2"
-dependencies = [
- "lzma-sys",
-]
-
-[[package]]
 name = "yog-data"
 version = "0.6.0"
 dependencies = [
@@ -5228,6 +5217,7 @@ dependencies = [
  "dirs",
  "flate2",
  "libc",
+ "lzma-rust2",
  "semver",
  "serde",
  "serde_json",
@@ -5235,7 +5225,6 @@ dependencies = [
  "tar",
  "toml 1.1.8+spec-1.1.0",
  "ureq",
- "xz2",
  "yog-home",
  "zip",
 ]

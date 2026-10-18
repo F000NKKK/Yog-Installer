@@ -1,5 +1,6 @@
-//! Unpacking downloads: zip, tar.gz, tar.xz — never outside the folder
-//! they go into, optionally without the one folder they're all in.
+//! Unpacking archives as a stream — zip, tar.gz, tar.xz — so a download is
+//! unpacked while it arrives; never outside the folder they go into,
+//! optionally without the one folder they're all in.
 
 use crate::progress::Cancel;
 use std::io::Read;
@@ -29,7 +30,7 @@ impl Kind {
     }
 }
 
-/// Unpacks `archive` into `dest`; `strip`: without the top folder every entry is in.
+/// Unpacks the archive file `archive` into `dest` (see [`unpack_stream`]).
 pub fn unpack(
     archive: &Path,
     kind: Kind,
@@ -37,15 +38,27 @@ pub fn unpack(
     strip: bool,
     cancel: &Cancel,
 ) -> Result<(), String> {
-    std::fs::create_dir_all(dest).map_err(|e| format!("{}: {e}", dest.display()))?;
     let file = std::fs::File::open(archive).map_err(|e| format!("{}: {e}", archive.display()))?;
-    let at = |e: std::io::Error| format!("{}: {e}", archive.display());
+    unpack_stream(std::io::BufReader::new(file), kind, dest, strip, cancel)
+        .map_err(|e| format!("{}: {e}", archive.display()))
+}
+
+/// Unpacks what `reader` gives, as it gives it, into `dest`; `strip`:
+/// without the top folder every entry is in.
+pub fn unpack_stream(
+    reader: impl Read,
+    kind: Kind,
+    dest: &Path,
+    strip: bool,
+    cancel: &Cancel,
+) -> Result<(), String> {
+    std::fs::create_dir_all(dest).map_err(|e| format!("{}: {e}", dest.display()))?;
     match kind {
-        Kind::Zip => {
-            unzip(file, dest, strip, cancel).map_err(|e| format!("{}: {e}", archive.display()))
-        }
-        Kind::TarGz => untar(flate2::read::GzDecoder::new(file), dest, strip, cancel).map_err(at),
-        Kind::TarXz => untar(xz2::read::XzDecoder::new(file), dest, strip, cancel).map_err(at),
+        Kind::Zip => unzip(reader, dest, strip, cancel),
+        Kind::TarGz => untar(flate2::read::GzDecoder::new(reader), dest, strip, cancel)
+            .map_err(|e| e.to_string()),
+        Kind::TarXz => untar(lzma_rust2::XzReader::new(reader, true), dest, strip, cancel)
+            .map_err(|e| e.to_string()),
     }
 }
 
@@ -80,11 +93,12 @@ fn untar(reader: impl Read, dest: &Path, strip: bool, cancel: &Cancel) -> std::i
     Ok(())
 }
 
-fn unzip(file: std::fs::File, dest: &Path, strip: bool, cancel: &Cancel) -> Result<(), String> {
-    let mut zip = zip::ZipArchive::new(file).map_err(|e| e.to_string())?;
-    for i in 0..zip.len() {
+/// A zip read entry by entry from its local headers, as it streams in.
+fn unzip(mut reader: impl Read, dest: &Path, strip: bool, cancel: &Cancel) -> Result<(), String> {
+    while let Some(mut entry) =
+        zip::read::read_zipfile_from_stream(&mut reader).map_err(|e| e.to_string())?
+    {
         cancel.check()?;
-        let mut entry = zip.by_index(i).map_err(|e| e.to_string())?;
         let Some(to) = entry.enclosed_name().and_then(|p| inside(dest, &p, strip)) else {
             continue;
         };
@@ -137,40 +151,26 @@ mod tests {
         assert_eq!(inside(dest, Path::new("/etc/passwd"), false), None);
     }
 
+    fn tar_gz() -> Vec<u8> {
+        let gz = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::fast());
+        let mut tar = tar::Builder::new(gz);
+        let data = b"hi";
+        let mut header = tar::Header::new_gnu();
+        header.set_size(data.len() as u64);
+        header.set_mode(0o755);
+        header.set_cksum();
+        tar.append_data(&mut header, "top/bin/tool", &data[..])
+            .unwrap();
+        tar.into_inner().unwrap().finish().unwrap()
+    }
+
     #[test]
-    fn a_tar_gz_unpacks_without_its_top_folder() {
+    fn a_stream_unpacks_without_its_top_folder() {
         let dir =
             std::env::temp_dir().join(format!("yog-installer-archive-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(&dir).unwrap();
-        let archive = dir.join("a.tar.gz");
-        {
-            let gz = flate2::write::GzEncoder::new(
-                std::fs::File::create(&archive).unwrap(),
-                flate2::Compression::fast(),
-            );
-            let mut tar = tar::Builder::new(gz);
-            let data = b"hi";
-            let mut header = tar::Header::new_gnu();
-            header.set_size(data.len() as u64);
-            header.set_mode(0o755);
-            header.set_cksum();
-            tar.append_data(&mut header, "top/bin/tool", &data[..])
-                .unwrap();
-            tar.into_inner().unwrap().finish().unwrap();
-        }
-        unpack(
-            &archive,
-            Kind::TarGz,
-            &dir.join("out"),
-            true,
-            &Cancel::default(),
-        )
-        .unwrap();
-        assert_eq!(
-            std::fs::read_to_string(dir.join("out/bin/tool")).unwrap(),
-            "hi"
-        );
+        unpack_stream(&tar_gz()[..], Kind::TarGz, &dir, true, &Cancel::default()).unwrap();
+        assert_eq!(std::fs::read_to_string(dir.join("bin/tool")).unwrap(), "hi");
         std::fs::remove_dir_all(&dir).unwrap();
     }
 }

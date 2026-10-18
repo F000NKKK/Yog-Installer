@@ -1,7 +1,8 @@
-import { Icon, IconButton, WindowControls, useT } from "substrate-platform-ui";
+import { WindowControls, useT } from "substrate-platform-ui";
+import { Notifications } from "./Notifications";
 
-/** The window's own title bar: its name, the notifications bell, the window buttons. */
-export function TitleBar({ notifications, onNotifications }: { notifications: number; onNotifications: () => void }) {
+/** The window's own title bar: its name, the notifications, the window buttons. */
+export function TitleBar({ notifications }: { notifications: string[] }) {
   const t = useT();
   return (
     <header className="yi-titlebar" data-tauri-drag-region>
@@ -9,12 +10,7 @@ export function TitleBar({ notifications, onNotifications }: { notifications: nu
         {t("Yog Installer")}
       </span>
       <div className="yi-titlebar-actions">
-        <span className="yi-bell">
-          <IconButton title={t("Notifications")} onClick={onNotifications}>
-            <Icon name="bell" />
-          </IconButton>
-          {notifications > 0 && <span className="yi-badge">{notifications}</span>}
-        </span>
+        <Notifications messages={notifications} />
         <WindowControls />
       </div>
     </header>

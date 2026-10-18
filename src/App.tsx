@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
-import { Button, DialogHost, NotificationHost, Tab, confirmDialog, notify, useT } from "substrate-platform-ui";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Button, DialogHost, NotificationHost, Tab, confirmDialog, notify, useLocale, useT } from "substrate-platform-ui";
 import { api, type Product, type Selection, type Snapshot } from "./api";
 import { ModifyWindow, type ModifySettings } from "./modify/ModifyWindow";
+import { NewsPanel } from "./NewsPanel";
 import { ProductCard } from "./ProductCard";
 import { TitleBar } from "./TitleBar";
 import { usePersisted } from "./usePersisted";
@@ -32,8 +33,19 @@ export default function App() {
     );
   }, []);
   const operation = useOperation(() => load(false));
+  const locale = useLocale();
 
   useEffect(() => load(false), [load]);
+
+  // An install or modify that didn't end goes on by itself, once a start.
+  const resumed = useRef(false);
+  useEffect(() => {
+    if (!snapshot?.pending || resumed.current) return;
+    resumed.current = true;
+    setPage("installed");
+    notify({ message: t("Going on with the installation that didn't finish.") });
+    api.resume().catch((e) => notify({ level: "error", message: String(e) }));
+  }, [snapshot, t]);
 
   const installed = snapshot?.products.filter((p) => p.installed !== null) ?? [];
   const available = snapshot?.products.filter((p) => p.installed === null) ?? [];
@@ -66,15 +78,9 @@ export default function App() {
     });
   }
 
-  function showProblems() {
-    const problems = snapshot?.problems ?? [];
-    if (problems.length === 0) notify({ message: t("No notifications.") });
-    for (const message of problems) notify({ level: "warn", message, timeout: 0 });
-  }
-
   return (
     <div className="yi-app">
-      <TitleBar notifications={snapshot?.problems.length ?? 0} onNotifications={showProblems} />
+      <TitleBar notifications={snapshot?.problems ?? []} />
       {snapshot?.installerUpdate && (
         <div className="yi-self-update">
           <span>{t("A newer Yog Installer is out ({version}). It updates itself before anything else.", { version: snapshot.installerUpdate })}</span>
@@ -95,6 +101,7 @@ export default function App() {
           {t("Check for updates")}
         </Button>
       </nav>
+      <div className="yi-body">
       <main className="yi-products">
         {error && <p className="yi-op-error">{error}</p>}
         {!snapshot && !error && <p className="yi-muted">{t("Looking for what's installed and what's new…")}</p>}
@@ -120,6 +127,8 @@ export default function App() {
           />
         ))}
       </main>
+      <NewsPanel news={snapshot?.news ?? []} locale={locale} />
+      </div>
       <footer className="yi-statusbar">{snapshot && t("Installer version {version}", { version: snapshot.version })}</footer>
       {modifying && snapshot && (
         <ModifyWindow product={modifying} snapshot={snapshot} settings={settings} onSettings={setSettings} onApply={(s) => apply(modifying, s)} onClose={() => setModifying(null)} />

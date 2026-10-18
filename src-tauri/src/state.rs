@@ -6,6 +6,7 @@ use std::sync::Mutex;
 use yog_home::Home;
 use yog_installer_core::catalog::Catalog;
 use yog_installer_core::detect::{self, Found, RealSystem};
+use yog_installer_core::latest::News;
 use yog_installer_core::progress::Cancel;
 use yog_installer_core::releases::Release;
 
@@ -15,6 +16,10 @@ pub struct AppState {
     pub catalog: Mutex<Catalog>,
     /// Id → its newest release; empty until first asked.
     pub latest: Mutex<BTreeMap<String, Release>>,
+    /// The latest releases of Yog's repos, newest first.
+    pub news: Mutex<Vec<News>>,
+    /// What went wrong once (at start), kept through refreshes.
+    pub notices: Mutex<Vec<String>>,
     /// What couldn't be asked or refreshed, for the notifications.
     pub problems: Mutex<Vec<String>>,
     /// The operation running, if one is.
@@ -23,8 +28,14 @@ pub struct AppState {
 
 impl AppState {
     pub fn new() -> Self {
+        let home = Home::locate();
+        if let Ok(home) = &home {
+            yog_installer_core::http::set_cache(home.cache_dir());
+        }
         Self {
-            home: Home::locate(),
+            home,
+            news: Mutex::new(Vec::new()),
+            notices: Mutex::new(Vec::new()),
             catalog: Mutex::new(Catalog::built_in()),
             latest: Mutex::new(BTreeMap::new()),
             problems: Mutex::new(Vec::new()),
@@ -56,11 +67,12 @@ impl AppState {
     /// Asks the channel and every source again.
     pub fn refresh(&self) -> Result<(), String> {
         let (catalog, problem) = yog_installer_core::channel::load(self.home()?);
-        let (latest, mut problems) = yog_installer_core::overview::latest(&catalog);
-        problems.extend(problem);
+        let mut latest = yog_installer_core::latest::fetch(&catalog);
+        latest.problems.extend(problem);
         *self.catalog.lock().expect("catalog lock") = catalog;
-        *self.latest.lock().expect("latest lock") = latest;
-        *self.problems.lock().expect("problems lock") = problems;
+        *self.latest.lock().expect("latest lock") = latest.newest;
+        *self.news.lock().expect("news lock") = latest.news;
+        *self.problems.lock().expect("problems lock") = latest.problems;
         Ok(())
     }
 

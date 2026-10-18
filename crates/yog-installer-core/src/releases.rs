@@ -29,6 +29,9 @@ pub struct Release {
     pub assets: Vec<Asset>,
     /// Its release notes' page.
     pub notes_url: Option<String>,
+    /// Its title, and when it came out (RFC 3339), where the source says.
+    pub title: Option<String>,
+    pub published: Option<String>,
 }
 
 impl Release {
@@ -37,6 +40,8 @@ impl Release {
             version: version.to_string(),
             assets: Vec::new(),
             notes_url: None,
+            title: None,
+            published: None,
         }
     }
 
@@ -68,6 +73,8 @@ pub fn of(source: &Source) -> Result<Vec<Release>, String> {
 #[derive(Deserialize)]
 struct GhRelease {
     tag_name: String,
+    name: Option<String>,
+    published_at: Option<String>,
     html_url: String,
     tarball_url: String,
     draft: bool,
@@ -115,6 +122,8 @@ fn github(repo: &str, source: bool) -> Result<Vec<Release>, String> {
                 version: r.tag_name.trim_start_matches('v').to_string(),
                 assets,
                 notes_url: Some(r.html_url),
+                title: r.name.filter(|n| !n.is_empty()),
+                published: r.published_at,
             }
         })
         .collect())
@@ -185,6 +194,8 @@ fn adoptium(major: u32) -> Result<Vec<Release>, String> {
                     sha256: p.checksum,
                 }],
                 notes_url: None,
+                title: None,
+                published: None,
             }
         })
         .collect())
@@ -218,6 +229,8 @@ fn zig() -> Result<Vec<Release>, String> {
                 version,
                 assets: vec![asset],
                 notes_url: None,
+                title: None,
+                published: None,
             })
         })
         .collect();

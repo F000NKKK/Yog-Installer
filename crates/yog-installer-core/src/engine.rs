@@ -2,17 +2,17 @@
 //! `components.json`, with progress events, until it's done, fails or is cancelled.
 
 use crate::catalog::{Catalog, Source};
-use crate::install::{self, Context, Item};
+use crate::install::{self, Context, Item, archive};
 use crate::progress::{CANCELLED, Event};
 use crate::releases::Release;
 use crate::selection::Change;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 use yog_home::components::{Components, Installed};
 
 /// When downloads happen, as VS Installer offers it.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Mode {
     /// Each package installs as soon as it's downloaded.
@@ -97,22 +97,34 @@ fn run(
         ctx.cancel.check()?;
         let id = change.id();
         let the = item(catalog, id).ok_or_else(|| format!("{id} isn't in the catalog"))?;
-        let download = match downloads.remove(id) {
-            Some(path) => Some(path),
-            None => download(catalog, plan, change, ctx)?,
-        };
-        ctx.sink.event(Event::Installing {
+        let installing = Event::Installing {
             component: id.to_string(),
             index: i + 1,
             of: plan.changes.len(),
-        });
+        };
+        let release = plan.releases.get(id);
+        // An archive, while it downloads: unpacked as the bytes arrive.
+        let streamed = match (mode, release, downloads.contains_key(id)) {
+            (Mode::InstallWhileDownloading, Some(release), false) => {
+                stream_in(&the, release, &installing, keep_downloads, ctx)?
+            }
+            _ => None,
+        };
+        let download = match (&streamed, downloads.remove(id)) {
+            (Some(_), _) => None,
+            (None, Some(path)) => Some(path),
+            (None, None) => download(catalog, plan, change, ctx)?,
+        };
+        if streamed.is_none() {
+            ctx.sink.event(installing);
+        }
         match change {
             Change::Install { version, .. } | Change::Update { to: version, .. } => {
-                let release = plan
-                    .releases
-                    .get(id)
-                    .ok_or_else(|| format!("{id}: no release {version}"))?;
-                let path = install::install(&the, release, download.as_deref(), ctx)?;
+                let release = release.ok_or_else(|| format!("{id}: no release {version}"))?;
+                let path = match streamed {
+                    Some(path) => path,
+                    None => install::install(&the, release, download.as_deref(), ctx)?,
+                };
                 if let Change::Update { from, .. } = change {
                     replace_old(&the, &mut components, id, from, &path, ctx)?;
                 }
@@ -177,6 +189,58 @@ fn in_place(source: &Source) -> bool {
     )
 }
 
+/// Downloads `the`'s archive and unpacks it at once, while it arrives
+/// (`installing` is told as it starts); where it went — none when its
+/// download isn't an archive (it's installed from the file).
+fn stream_in(
+    the: &Item,
+    release: &Release,
+    installing: &Event,
+    keep_downloads: bool,
+    ctx: &Context,
+) -> Result<Option<PathBuf>, String> {
+    let (Some(asset), Some(unpack)) = (
+        install::asset(the, release),
+        install::unpacking(the, release, ctx),
+    ) else {
+        return Ok(None);
+    };
+    let dest = cache_path(ctx, the.id(), release, &asset.name);
+    let _ = std::fs::remove_dir_all(&unpack.staging);
+    ctx.sink.event(installing.clone());
+    let progress = |done, total| {
+        ctx.sink.event(Event::Downloading {
+            component: the.id().to_string(),
+            done,
+            total,
+        })
+    };
+    let unpack_into =
+        |pipe| archive::unpack_stream(pipe, unpack.kind, &unpack.staging, unpack.strip, ctx.cancel);
+    crate::download::stream(
+        &asset.url,
+        &dest,
+        asset.sha256.as_deref(),
+        ctx.cancel,
+        &progress,
+        Some(unpack_into),
+    )?;
+    let path = install::finish(the, release, &unpack, ctx)?;
+    if !keep_downloads {
+        let _ = std::fs::remove_file(&dest);
+    }
+    Ok(Some(path))
+}
+
+/// Where `id`'s download of `release` waits in the cache.
+fn cache_path(ctx: &Context, id: &str, release: &Release, name: &str) -> PathBuf {
+    ctx.home
+        .cache_dir()
+        .join(id)
+        .join(&release.version)
+        .join(name)
+}
+
 /// Fetches `change`'s asset into the cache; none when it has none (a tool's, a removal).
 fn download(
     catalog: &Catalog,
@@ -194,12 +258,7 @@ fn download(
     let Some(asset) = item(catalog, id).and_then(|i| install::asset(&i, release).cloned()) else {
         return Ok(None);
     };
-    let dest = ctx
-        .home
-        .cache_dir()
-        .join(id)
-        .join(&release.version)
-        .join(&asset.name);
+    let dest = cache_path(ctx, id, release, &asset.name);
     let progress = |done, total| {
         ctx.sink.event(Event::Downloading {
             component: id.to_string(),
@@ -207,7 +266,7 @@ fn download(
             total,
         })
     };
-    crate::http::download(
+    crate::download::download(
         &asset.url,
         &dest,
         asset.sha256.as_deref(),

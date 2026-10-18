@@ -41,6 +41,23 @@ export interface Workload {
   optional: string[];
 }
 
+/** `latest::News` — a release in the developer news. */
+export interface News {
+  of: string;
+  version: string;
+  title: string | null;
+  published: string | null;
+  url: string | null;
+}
+
+/** `pending::Pending` — an install or modify that didn't end. */
+export interface Pending {
+  product: string;
+  selection: Selection;
+  mode: Mode;
+  keepDownloads: boolean;
+}
+
 /** `commands::Snapshot` — everything the window shows. */
 export interface Snapshot {
   version: string;
@@ -52,6 +69,8 @@ export interface Snapshot {
   workloads: Workload[];
   productWorkloads: [string, string[]][];
   installerUpdate: string | null;
+  pending: Pending | null;
+  news: News[];
   problems: string[];
 }
 
@@ -112,6 +131,8 @@ export const api = {
   apply: (product: string, selection: Selection, mode: Mode, keepDownloads: boolean) => invoke<void>("apply", { product, selection, mode, keepDownloads }),
   uninstall: (product: string) => invoke<void>("uninstall", { product }),
   repair: (product: string) => invoke<void>("repair", { product }),
+  resume: () => invoke<void>("resume"),
+  forgetPending: () => invoke<void>("forget_pending"),
   cancel: () => invoke<void>("cancel"),
   pause: (paused: boolean) => invoke<void>("pause", { paused }),
   launch: (product: string) => invoke<void>("launch", { product }),

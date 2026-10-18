@@ -4,6 +4,7 @@
 
 pub mod archive;
 mod files;
+pub mod launcher;
 pub mod run;
 mod tools;
 
@@ -11,11 +12,16 @@ use crate::catalog::{Product, Source};
 use crate::platform;
 use crate::progress::{Cancel, Event, Sink};
 use crate::releases::{Asset, Release, SOURCE_ARCHIVE};
+use archive::Kind;
 use std::path::{Path, PathBuf};
+
+pub(crate) use files::make_executable;
 use yog_home::Home;
 
 /// Where zig goes, under the home's tools.
 const ZIG: &str = "zig";
+/// What an unpacking folder's name ends with until it's moved into place.
+const STAGING_SUFFIX: &str = ".part";
 
 /// What installing has to hand.
 pub struct Context<'a> {
@@ -74,6 +80,74 @@ pub fn asset<'r>(item: &Item, release: &'r Release) -> Option<&'r Asset> {
     }
 }
 
+/// An archive download's way in: unpacked into `staging` beside its place
+/// (while it downloads, or from the file), then moved there ([`finish`]).
+pub struct Unpacking {
+    pub kind: Kind,
+    pub staging: PathBuf,
+    /// Without the one folder the archive's entries are in.
+    pub strip: bool,
+}
+
+/// Where `item` at `release` goes in Yog's home, when its download is unpacked there.
+fn place(item: &Item, version: &str, ctx: &Context) -> Option<PathBuf> {
+    match (item, item.source()) {
+        (Item::Product(p), _) => Some(ctx.home.product_dir(&p.id, version)),
+        (_, Source::Git { .. }) => Some(ctx.home.loader_sdk_dir(version)),
+        (_, Source::Adoptium { major }) => Some(ctx.home.jdk_dir(*major, version)),
+        (_, Source::Zig) => Some(ctx.home.tool_dir(ZIG, version)),
+        _ => None,
+    }
+}
+
+/// How `item` at `release` unpacks, when its download is an archive (a
+/// source, a JDK, zig, a macOS application).
+pub fn unpacking(item: &Item, release: &Release, ctx: &Context) -> Option<Unpacking> {
+    let kind = Kind::of(&asset(item, release)?.name)?;
+    let dest = place(item, &release.version, ctx)?;
+    let mut staging = dest.clone().into_os_string();
+    staging.push(STAGING_SUFFIX);
+    // A product's package keeps its folder (the .app); sources and tools are in one to drop.
+    Some(Unpacking {
+        kind,
+        staging: staging.into(),
+        strip: !matches!(item, Item::Product(_)),
+    })
+}
+
+/// Moves what was unpacked into its place; where `components.json` says it is
+/// (a JDK's home, a macOS application linked into ~/Applications).
+pub fn finish(
+    item: &Item,
+    release: &Release,
+    unpacked: &Unpacking,
+    ctx: &Context,
+) -> Result<PathBuf, String> {
+    let dest = place(item, &release.version, ctx)
+        .ok_or_else(|| format!("{}: nowhere to unpack", item.id()))?;
+    files::remove_dir(&dest)?;
+    if let Some(dir) = dest.parent() {
+        std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+    }
+    std::fs::rename(&unpacked.staging, &dest).map_err(|e| format!("{}: {e}", dest.display()))?;
+    match item {
+        Item::Product(p) => {
+            let app = files::find_app(&dest)
+                .ok_or_else(|| format!("{}: no .{} inside", p.id, launcher::APP_EXT))?;
+            launcher::link_application(&app)?;
+            Ok(app)
+        }
+        Item::Component { .. } => {
+            let mac_jdk_home = dest.join("Contents").join("Home");
+            Ok(if mac_jdk_home.is_dir() {
+                mac_jdk_home
+            } else {
+                dest
+            })
+        }
+    }
+}
+
 /// Installs `item` at `release` (`download`: its asset, already fetched);
 /// where it went, for `components.json`.
 pub fn install(
@@ -83,6 +157,17 @@ pub fn install(
     ctx: &Context,
 ) -> Result<PathBuf, String> {
     let need = || download.ok_or_else(|| format!("{}: nothing downloaded to install", item.id()));
+    if let Some(unpack) = unpacking(item, release, ctx) {
+        files::remove_dir(&unpack.staging)?;
+        archive::unpack(
+            need()?,
+            unpack.kind,
+            &unpack.staging,
+            unpack.strip,
+            ctx.cancel,
+        )?;
+        return finish(item, release, &unpack, ctx);
+    }
     let version = &release.version;
     match (item, item.source()) {
         (Item::Product(p), _) => files::product(
@@ -92,31 +177,13 @@ pub fn install(
             asset(item, release).map(|a| a.name.as_str()),
             ctx,
         ),
-        (_, Source::Git { .. }) => files::unpacked(
-            need()?,
-            SOURCE_ARCHIVE,
-            &ctx.home.loader_sdk_dir(version),
-            ctx,
-        ),
-        (_, Source::Adoptium { major }) => files::jdk(
-            need()?,
-            asset(item, release),
-            &ctx.home.jdk_dir(*major, version),
-            ctx,
-        ),
-        (_, Source::Zig) => files::unpacked(
-            need()?,
-            &asset(item, release).map_or(String::new(), |a| a.name.clone()),
-            &ctx.home.tool_dir(ZIG, version),
-            ctx,
-        ),
         (_, Source::Crate { name }) => tools::cargo_install(item.id(), name, version, ctx),
         (_, Source::Rustup { toolchain }) => tools::toolchain(item.id(), toolchain, ctx),
         (_, Source::RustTargets { toolchain, targets }) => {
             tools::targets(item.id(), toolchain, targets, ctx)
         }
-        (Item::Component { .. }, Source::Github { .. }) => Err(format!(
-            "{}: a GitHub release is installed as a product",
+        _ => Err(format!(
+            "{}: its download isn't an archive Yog Installer unpacks",
             item.id()
         )),
     }
