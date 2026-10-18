@@ -29,6 +29,21 @@ export default defineConfig(async () => ({
   plugins: [react(), watchSubstrate()],
   // One React for the app and the symlinked platform UI.
   resolve: { preserveSymlinks: true, dedupe: ["react", "react-dom"] },
+  // The platform UI's CommonJS dependencies, reached only through the
+  // symlinked `substrate-platform-ui`: prebundled, or the dev server serves
+  // them as ES modules they aren't ("default cannot be resolved").
+  optimizeDeps: {
+    include: [
+      "substrate-platform-ui > markdown-it",
+      "substrate-platform-ui > markdown-it-footnote",
+      "substrate-platform-ui > markdown-it-github-alerts",
+      "substrate-platform-ui > @vscode/markdown-it-katex",
+      "substrate-platform-ui > katex",
+      "substrate-platform-ui > highlight.js",
+      "substrate-platform-ui > dompurify",
+      "substrate-platform-ui > mermaid",
+    ],
+  },
   clearScreen: false,
   server: {
     // Not Yog IDLE's port: both can run in development side by side.
