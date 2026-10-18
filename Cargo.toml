@@ -26,6 +26,7 @@ tar = "0.4"
 flate2 = "1"
 xz2 = "0.1"
 dirs = "7"
+libc = "0.2"
 
 # Yog's crates from the sibling checkout, as Yog-IDLE does.
 [patch.crates-io]

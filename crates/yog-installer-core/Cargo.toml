@@ -20,3 +20,7 @@ tar = { workspace = true }
 flate2 = { workspace = true }
 xz2 = { workspace = true }
 dirs = { workspace = true }
+
+# Pausing and stopping a tool's whole process group (`install::run`).
+[target.'cfg(unix)'.dependencies]
+libc = { workspace = true }

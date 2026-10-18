@@ -1,5 +1,8 @@
 //! Running an installer's tool (rustup, cargo, a setup program): its output
-//! line by line, stopped when the operation is cancelled.
+//! line by line; paused, resumed and stopped with the operation. On Unix
+//! the tool runs in a process group of its own, so what it starts (cargo's
+//! rustc) is paused and stopped with it; elsewhere a pause waits for the
+//! step to end.
 
 use crate::progress::{CANCELLED, Cancel};
 use std::io::{BufRead, BufReader};
@@ -19,7 +22,10 @@ pub fn tool(
     line: &dyn Fn(String),
 ) -> Result<(), String> {
     let name = program.display().to_string();
-    let mut child = Command::new(program)
+    let mut command = Command::new(program);
+    #[cfg(unix)]
+    std::os::unix::process::CommandExt::process_group(&mut command, 0);
+    let mut child = command
         .args(args)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
@@ -46,14 +52,19 @@ pub fn tool(
     })
     .collect();
     drop(tx);
+    let mut stopped = false;
     let status = loop {
         while let Ok(l) = rx.try_recv() {
             line(l);
         }
         if cancel.is_cancelled() {
-            let _ = child.kill();
+            group::kill(&mut child);
             let _ = child.wait();
             return Err(CANCELLED.into());
+        }
+        if cancel.is_paused() != stopped {
+            stopped = cancel.is_paused();
+            group::pause(&child, stopped);
         }
         match child.try_wait().map_err(|e| format!("{name}: {e}"))? {
             Some(status) => break status,
@@ -70,5 +81,37 @@ pub fn tool(
         Ok(())
     } else {
         Err(format!("{name} {} — {status}", args.join(" ")))
+    }
+}
+
+/// The tool's process group: paused, resumed and killed as one.
+mod group {
+    use std::process::Child;
+
+    #[cfg(unix)]
+    fn signal(child: &Child, signal: libc::c_int) {
+        let Ok(pid) = libc::pid_t::try_from(child.id()) else {
+            return;
+        };
+        // SAFETY: a signal to the group the child leads (spawned with
+        // `process_group(0)`); no memory is touched.
+        unsafe { libc::kill(-pid, signal) };
+    }
+
+    pub fn pause(child: &Child, paused: bool) {
+        #[cfg(unix)]
+        signal(child, if paused { libc::SIGSTOP } else { libc::SIGCONT });
+        #[cfg(not(unix))]
+        let _ = (child, paused);
+    }
+
+    pub fn kill(child: &mut Child) {
+        #[cfg(unix)]
+        {
+            // A stopped group has to go on to die.
+            signal(child, libc::SIGCONT);
+            signal(child, libc::SIGKILL);
+        }
+        let _ = child.kill();
     }
 }

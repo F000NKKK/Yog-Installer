@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, IconButton, Icon, Tab, useT } from "substrate-platform-ui";
 import type { Mode, Product, Selection, Snapshot } from "../api";
 import { formatBytes } from "../format";
@@ -40,7 +40,14 @@ export function ModifyWindow({ product, snapshot, settings, onSettings, onApply,
   const chosen = workloads.filter((w) => selection?.workloads.includes(w.id));
   const reasons = plan?.reasons ?? {};
   const nothingToDo = plan !== null && plan.changes.length === 0;
-  const blocked = !selection || !plan || nothingToDo || plan.conflicts.length > 0;
+  const blocked = !selection || !plan || plan.conflicts.length > 0;
+
+  // Escape leaves, as the close button does.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   const tabs: [Page, string][] = [
     ["workloads", t("Workloads")],
@@ -107,9 +114,16 @@ export function ModifyWindow({ product, snapshot, settings, onSettings, onApply,
             <option value="installWhileDownloading">{t("Install while downloading")}</option>
             <option value="downloadAllThenInstall">{t("Download all, then install")}</option>
           </select>
-          <Button variant="primary" className="yi-modify-go" disabled={blocked} onClick={() => selection && onApply(selection)}>
-            {installing ? t("Install") : t("Modify")}
-          </Button>
+          {nothingToDo ? (
+            // Nothing chosen differs from what's there: the button only leaves.
+            <Button variant="primary" className="yi-modify-go" onClick={onClose}>
+              {t("Close")}
+            </Button>
+          ) : (
+            <Button variant="primary" className="yi-modify-go" disabled={blocked} onClick={() => selection && onApply(selection)}>
+              {installing ? t("Install") : t("Modify")}
+            </Button>
+          )}
         </div>
       </footer>
     </div>

@@ -3,12 +3,14 @@
 use crate::progress::Cancel;
 use serde::de::DeserializeOwned;
 use sha2::{Digest, Sha256};
-use std::io::{Read, Write};
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
 use std::sync::OnceLock;
 
 /// How the Installer introduces itself (GitHub's API wants one).
 const USER_AGENT: &str = concat!("yog-installer/", env!("CARGO_PKG_VERSION"));
+/// HTTP's answer to a `Range` request it honors.
+const PARTIAL_CONTENT: u16 = 206;
 /// Bytes read between progress reports and cancel checks.
 const CHUNK: usize = 64 * 1024;
 /// GitHub's REST API, and the media type it answers in.
@@ -75,38 +77,61 @@ fn fetch(
     if let Some(dir) = dest.parent() {
         std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     }
-    let resp = agent().get(url).call().map_err(|e| format!("{url}: {e}"))?;
-    let total = resp
-        .headers()
-        .get("content-length")
-        .and_then(|v| v.to_str().ok())
-        .and_then(|v| v.parse().ok());
-    let mut body = resp.into_body().into_reader();
-    let mut file = std::fs::File::create(dest).map_err(|e| format!("{}: {e}", dest.display()))?;
+    let at = |e: std::io::Error| format!("{}: {e}", dest.display());
+    let mut file = std::fs::File::create(dest).map_err(at)?;
     let mut hash = Sha256::new();
     let mut buf = vec![0u8; CHUNK];
-    let mut done = 0u64;
+    let (mut done, mut total) = (0u64, None);
+    // One connection per stretch between pauses: a pause closes it, so the
+    // download really stops; going on asks for the rest (`Range`).
     loop {
         cancel.check()?;
-        let n = body.read(&mut buf).map_err(|e| format!("{url}: {e}"))?;
-        if n == 0 {
-            break;
+        let mut req = agent().get(url);
+        if done > 0 {
+            req = req.header("Range", &format!("bytes={done}-"));
         }
-        file.write_all(&buf[..n])
-            .map_err(|e| format!("{}: {e}", dest.display()))?;
-        hash.update(&buf[..n]);
-        done += n as u64;
-        progress(done, total);
-    }
-    if let Some(want) = sha256 {
-        let got = hex(&hash.finalize());
-        if !got.eq_ignore_ascii_case(want) {
-            return Err(format!(
-                "{url}: the download is damaged (sha256 {got}, not {want})"
-            ));
+        let resp = req.call().map_err(|e| format!("{url}: {e}"))?;
+        if done > 0 && resp.status().as_u16() != PARTIAL_CONTENT {
+            // The server can't send the rest: the whole file again.
+            file.set_len(0).map_err(at)?;
+            file.seek(SeekFrom::Start(0)).map_err(at)?;
+            (hash, done) = (Sha256::new(), 0);
+        }
+        let length: Option<u64> = resp
+            .headers()
+            .get("content-length")
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.parse().ok());
+        total = total.or(length.map(|l| l + done));
+        let mut body = resp.into_body().into_reader();
+        loop {
+            if cancel.is_paused() {
+                break;
+            }
+            cancel.check()?;
+            let n = body.read(&mut buf).map_err(|e| format!("{url}: {e}"))?;
+            if n == 0 {
+                return verify(url, hash, sha256);
+            }
+            file.write_all(&buf[..n]).map_err(at)?;
+            hash.update(&buf[..n]);
+            done += n as u64;
+            progress(done, total);
         }
     }
-    Ok(())
+}
+
+/// The finished download's hash against the one it must have.
+fn verify(url: &str, hash: Sha256, sha256: Option<&str>) -> Result<(), String> {
+    let Some(want) = sha256 else { return Ok(()) };
+    let got = hex(&hash.finalize());
+    if got.eq_ignore_ascii_case(want) {
+        Ok(())
+    } else {
+        Err(format!(
+            "{url}: the download is damaged (sha256 {got}, not {want})"
+        ))
+    }
 }
 
 fn hex(bytes: &[u8]) -> String {

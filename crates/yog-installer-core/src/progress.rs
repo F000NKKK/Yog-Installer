@@ -81,13 +81,17 @@ impl Cancel {
         self.cancelled.load(Ordering::Relaxed)
     }
 
+    pub fn is_paused(&self) -> bool {
+        self.paused.load(Ordering::Relaxed)
+    }
+
     pub fn set_paused(&self, paused: bool) {
         self.paused.store(paused, Ordering::Relaxed);
     }
 
     /// Waits while paused; then `Err(CANCELLED)` once cancelled.
     pub fn check(&self) -> Result<(), String> {
-        while self.paused.load(Ordering::Relaxed) && !self.is_cancelled() {
+        while self.is_paused() && !self.is_cancelled() {
             std::thread::sleep(PAUSE_POLL);
         }
         if self.is_cancelled() {
