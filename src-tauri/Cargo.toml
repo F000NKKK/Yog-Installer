@@ -1,0 +1,24 @@
+[package]
+name = "yog-installer"
+version = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+description = "Yog Installer — installs and updates Yog IDLE, the Yog CLI, the loader SDK, JDKs and the Rust toolchain."
+
+[lib]
+name = "yog_installer_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+yog-installer-core = { workspace = true }
+yog-home = { workspace = true }
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+serde = { workspace = true }
+serde_json = { workspace = true }

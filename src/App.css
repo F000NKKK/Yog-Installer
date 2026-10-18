@@ -1,0 +1,221 @@
+/* Yog Installer — Visual Studio Installer's layout, in the platform's tokens. */
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+.yi-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--sp-surface-0);
+  color: var(--sp-text);
+  font-family: var(--sp-font-ui);
+  font-size: var(--sp-font-size);
+}
+
+.yi-titlebar {
+  display: flex;
+  align-items: center;
+  height: var(--sp-caption-height);
+  padding-left: var(--sp-space-md);
+  background: var(--sp-surface-1);
+  border-bottom: 1px solid var(--sp-border);
+  user-select: none;
+}
+
+.yi-titlebar-name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.yi-titlebar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-xs);
+}
+
+.yi-badge {
+  position: absolute;
+  margin: -14px 0 0 14px;
+  min-width: 14px;
+  padding: 0 3px;
+  border-radius: 7px;
+  background: var(--sp-accent);
+  color: var(--sp-accent-contrast);
+  font-size: var(--sp-font-size-xs);
+  line-height: 14px;
+}
+
+.yi-self-update {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-md);
+  padding: var(--sp-space-sm) var(--sp-space-lg);
+  background: var(--sp-accent-soft);
+}
+
+.yi-self-update span {
+  flex: 1;
+}
+
+.yi-tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-xs);
+  padding: var(--sp-space-sm) var(--sp-space-lg) 0;
+  border-bottom: 1px solid var(--sp-border);
+}
+
+.yi-tabs-spacer {
+  flex: 1;
+}
+
+.yi-products {
+  flex: 1;
+  overflow: auto;
+  padding: var(--sp-space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-md);
+}
+
+.yi-card {
+  display: flex;
+  gap: var(--sp-space-lg);
+  padding: var(--sp-space-lg);
+  background: var(--sp-surface-1);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-md);
+  max-width: 900px;
+}
+
+.yi-card-icon {
+  color: var(--sp-accent);
+}
+
+.yi-card-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-2xs);
+  min-width: 0;
+}
+
+.yi-card-name {
+  margin: 0;
+  font-size: 1.25em;
+  font-weight: 600;
+}
+
+.yi-card-version,
+.yi-card-size,
+.yi-muted {
+  color: var(--sp-text-muted);
+}
+
+.yi-card-description {
+  margin: var(--sp-space-xs) 0;
+}
+
+.yi-card-update {
+  display: flex;
+  gap: var(--sp-space-sm);
+  margin-top: var(--sp-space-sm);
+  font-weight: 600;
+  color: var(--sp-accent);
+}
+
+.yi-card-update-version {
+  color: var(--sp-text-muted);
+  font-weight: normal;
+}
+
+.yi-card-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sp-space-xs);
+  min-width: 120px;
+}
+
+.yi-more-anchor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.yi-more-chevron {
+  transform: rotate(90deg);
+}
+
+.yi-link {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sp-accent);
+  cursor: pointer;
+  font: inherit;
+}
+
+.yi-link:hover {
+  text-decoration: underline;
+}
+
+.yi-op {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-xs);
+  margin-top: var(--sp-space-sm);
+}
+
+.yi-op-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.yi-op-detail {
+  color: var(--sp-text-muted);
+  font-size: var(--sp-font-size-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.yi-op-buttons {
+  display: flex;
+  gap: var(--sp-space-xs);
+}
+
+.yi-op--ended {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.yi-op-error {
+  color: var(--sp-danger);
+}
+
+.yi-op-note {
+  color: var(--sp-text-muted);
+}
+
+.yi-path {
+  font-family: var(--sp-font-mono);
+  font-size: var(--sp-font-size-sm);
+}
+
+.yi-statusbar {
+  height: var(--sp-statusbar-height);
+  padding: 0 var(--sp-space-lg);
+  display: flex;
+  align-items: center;
+  border-top: 1px solid var(--sp-border);
+  color: var(--sp-text-muted);
+  font-size: var(--sp-font-size-sm);
+}

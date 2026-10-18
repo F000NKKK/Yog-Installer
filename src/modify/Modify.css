@@ -1,0 +1,204 @@
+/* The Modify window: over the main one, Visual Studio Installer's layout. */
+
+.yi-modify {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--sp-surface-0);
+  z-index: 10;
+}
+
+.yi-modify-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--sp-caption-height);
+  padding-left: var(--sp-space-md);
+  background: var(--sp-surface-1);
+  border-bottom: 1px solid var(--sp-border);
+  font-weight: 600;
+}
+
+.yi-modify-tabs {
+  display: flex;
+  gap: var(--sp-space-xs);
+  padding: var(--sp-space-sm) var(--sp-space-lg) 0;
+  border-bottom: 1px solid var(--sp-border);
+}
+
+.yi-modify-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.yi-modify-page {
+  flex: 1;
+  overflow: auto;
+  padding: var(--sp-space-lg);
+}
+
+.yi-workloads {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--sp-space-md);
+}
+
+.yi-workload {
+  display: flex;
+  gap: var(--sp-space-md);
+  padding: var(--sp-space-md);
+  border: 1px solid var(--sp-border);
+  border-radius: var(--sp-radius-md);
+  background: var(--sp-surface-1);
+  cursor: pointer;
+}
+
+.yi-workload:hover {
+  background: var(--sp-hover);
+}
+
+.yi-workload.is-checked {
+  border-color: var(--sp-accent);
+  box-shadow: inset 0 0 0 1px var(--sp-accent);
+}
+
+.yi-workload-icon {
+  color: var(--sp-accent);
+}
+
+.yi-workload-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-2xs);
+}
+
+.yi-workload-name {
+  font-weight: 600;
+}
+
+.yi-workload-description {
+  color: var(--sp-text-muted);
+  font-size: var(--sp-font-size-sm);
+}
+
+.yi-workload-check {
+  align-self: flex-start;
+}
+
+.yi-components,
+.yi-languages,
+.yi-locations {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-sm);
+  max-width: 760px;
+}
+
+.yi-component-group h3,
+.yi-locations h3 {
+  margin: var(--sp-space-md) 0 var(--sp-space-xs);
+  font-size: 1em;
+}
+
+.yi-component {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-sm);
+  min-height: var(--sp-row-height);
+}
+
+.yi-component-name {
+  flex: 1;
+}
+
+.yi-component-meta {
+  color: var(--sp-text-muted);
+  font-size: var(--sp-font-size-sm);
+}
+
+.yi-details {
+  width: 300px;
+  overflow: auto;
+  padding: var(--sp-space-lg);
+  border-left: 1px solid var(--sp-border);
+  background: var(--sp-surface-1);
+}
+
+.yi-details h3 {
+  margin: 0 0 var(--sp-space-sm);
+  font-size: 1em;
+}
+
+.yi-detail summary {
+  list-style: none;
+  cursor: pointer;
+  font-weight: 600;
+  margin: var(--sp-space-xs) 0;
+}
+
+.yi-detail summary::-webkit-details-marker {
+  display: none;
+}
+
+.yi-detail[open] .yi-detail-chevron {
+  transform: rotate(90deg);
+}
+
+.yi-detail-heading {
+  margin: var(--sp-space-xs) 0 var(--sp-space-2xs) var(--sp-space-md);
+  color: var(--sp-text-muted);
+  font-size: var(--sp-font-size-sm);
+}
+
+.yi-detail-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-xs);
+  margin-left: var(--sp-space-md);
+  min-height: var(--sp-row-height);
+}
+
+.yi-detail-row--included {
+  color: var(--sp-text-muted);
+}
+
+.yi-conflicts {
+  padding: var(--sp-space-sm) var(--sp-space-lg);
+  background: var(--sp-surface-2);
+  color: var(--sp-warning);
+  border-top: 1px solid var(--sp-border);
+}
+
+.yi-modify-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-lg);
+  padding: var(--sp-space-md) var(--sp-space-lg);
+  border-top: 1px solid var(--sp-border);
+  background: var(--sp-surface-1);
+}
+
+.yi-modify-location {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.yi-modify-total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.yi-mode {
+  height: var(--sp-control-height);
+  border-radius: var(--sp-control-radius);
+  border: 1px solid var(--sp-control-border);
+  background: var(--sp-surface-2);
+  color: var(--sp-text);
+  padding: 0 var(--sp-control-padding-x);
+}

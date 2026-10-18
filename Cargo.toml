@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/yog-installer-core"]
+members = ["crates/yog-installer-core", "src-tauri"]
 
 [workspace.package]
 version = "0.1.0"
@@ -20,7 +20,7 @@ toml = "1"
 # HTTPS for releases and downloads (rustls: no system OpenSSL).
 ureq = { version = "3", features = ["json"] }
 semver = "1"
-sha2 = "0.10"
+sha2 = "0.11"
 zip = { version = "9", default-features = false, features = ["deflate"] }
 tar = "0.4"
 flate2 = "1"

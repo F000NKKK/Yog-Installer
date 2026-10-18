@@ -45,31 +45,76 @@ impl Selection {
     /// Every component it makes: the workloads' required and still-checked
     /// recommended ones, the checked ones, and all they require.
     pub fn components(&self, catalog: &Catalog) -> BTreeSet<String> {
-        let mut out = BTreeSet::new();
-        for w in self.workloads.iter().filter_map(|w| catalog.workload(w)) {
-            out.extend(w.required.iter().cloned());
-            out.extend(
-                w.recommended
-                    .iter()
-                    .filter(|c| !self.unchecked.contains(*c))
-                    .cloned(),
-            );
+        self.reasons(catalog).into_keys().collect()
+    }
+
+    /// Each component it makes, and why — what decides whether its checkbox
+    /// can be cleared (a workload's required one and a requirement can't).
+    pub fn reasons(&self, catalog: &Catalog) -> BTreeMap<String, Why> {
+        let mut out = BTreeMap::new();
+        let workloads: Vec<_> = self
+            .workloads
+            .iter()
+            .filter_map(|w| catalog.workload(w))
+            .collect();
+        for w in &workloads {
+            for c in &w.required {
+                out.entry(c.clone()).or_insert_with(|| Why::Required {
+                    workload: w.id.clone(),
+                });
+            }
         }
-        out.extend(self.checked.iter().cloned());
-        let mut todo: Vec<String> = out.iter().cloned().collect();
+        for c in &self.checked {
+            out.entry(c.clone()).or_insert(Why::Chosen);
+        }
+        for w in &workloads {
+            for c in w
+                .recommended
+                .iter()
+                .filter(|c| !self.unchecked.contains(*c))
+            {
+                out.entry(c.clone()).or_insert_with(|| Why::Recommended {
+                    workload: w.id.clone(),
+                });
+            }
+        }
+        let mut todo: Vec<String> = out.keys().cloned().collect();
         while let Some(id) = todo.pop() {
             for r in catalog
                 .component(&id)
                 .map(|c| c.requires.clone())
                 .unwrap_or_default()
             {
-                if out.insert(r.clone()) {
+                if !out.contains_key(&r) {
+                    out.insert(
+                        r.clone(),
+                        Why::RequiredBy {
+                            component: id.clone(),
+                        },
+                    );
                     todo.push(r);
                 }
             }
         }
         out
     }
+}
+
+/// Why a component is in a selection.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum Why {
+    Required {
+        workload: String,
+    },
+    Recommended {
+        workload: String,
+    },
+    /// Checked by itself (an individual component, a workload's optional one).
+    Chosen,
+    RequiredBy {
+        component: String,
+    },
 }
 
 /// One thing a plan does.
@@ -103,7 +148,8 @@ impl Change {
 
 /// What makes `wanted` installed at `latest` (id → its newest version):
 /// installs and updates, what a component requires first; then removals of
-/// what the Installer put there and isn't wanted (what was there before it stays).
+/// components the Installer put there and aren't wanted (what was there
+/// before it stays, and products go only when uninstalled).
 pub fn changes(
     catalog: &Catalog,
     wanted: &BTreeSet<String>,
@@ -130,7 +176,8 @@ pub fn changes(
     }
     for f in installed
         .iter()
-        .filter(|f| f.managed && !wanted.contains(&f.id))
+        // Products go only when uninstalled, never as a side effect of a modify.
+        .filter(|f| f.managed && !wanted.contains(&f.id) && catalog.component(&f.id).is_some())
     {
         out.push(Change::Remove {
             id: f.id.clone(),

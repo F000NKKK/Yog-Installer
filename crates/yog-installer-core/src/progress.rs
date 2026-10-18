@@ -4,6 +4,7 @@
 use serde::Serialize;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::Duration;
 
 /// One thing that happened, for the UI's progress (as VS Installer shows it).
 #[derive(Debug, Clone, Serialize, PartialEq)]
@@ -58,24 +59,37 @@ impl<F: Fn(Event) + Send + Sync> Sink for F {
     }
 }
 
-/// Cancels an operation from another thread; its steps check it between chunks.
+/// Pauses, resumes and cancels an operation from another thread; its steps
+/// check it between chunks (and wait there while it's paused).
 #[derive(Debug, Clone, Default)]
-pub struct Cancel(Arc<AtomicBool>);
+pub struct Cancel {
+    cancelled: Arc<AtomicBool>,
+    paused: Arc<AtomicBool>,
+}
 
 /// Why a step stopped: the user cancelled, or something failed.
 pub const CANCELLED: &str = "cancelled";
+/// How often a paused step looks whether it may go on.
+const PAUSE_POLL: Duration = Duration::from_millis(100);
 
 impl Cancel {
     pub fn cancel(&self) {
-        self.0.store(true, Ordering::Relaxed);
+        self.cancelled.store(true, Ordering::Relaxed);
     }
 
     pub fn is_cancelled(&self) -> bool {
-        self.0.load(Ordering::Relaxed)
+        self.cancelled.load(Ordering::Relaxed)
     }
 
-    /// `Err(CANCELLED)` once cancelled.
+    pub fn set_paused(&self, paused: bool) {
+        self.paused.store(paused, Ordering::Relaxed);
+    }
+
+    /// Waits while paused; then `Err(CANCELLED)` once cancelled.
     pub fn check(&self) -> Result<(), String> {
+        while self.paused.load(Ordering::Relaxed) && !self.is_cancelled() {
+            std::thread::sleep(PAUSE_POLL);
+        }
         if self.is_cancelled() {
             Err(CANCELLED.into())
         } else {
