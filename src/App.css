@@ -271,7 +271,17 @@ body,
 }
 
 .yi-news-meta {
+  display: flex;
+  gap: var(--sp-space-sm);
   font-size: var(--sp-font-size-sm);
+  white-space: nowrap;
+}
+
+.yi-news-of {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .yi-news h2.yi-help-heading {

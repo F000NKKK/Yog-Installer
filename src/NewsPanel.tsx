@@ -12,7 +12,7 @@ const HELP_LINKS = [
 /** The right column, as Visual Studio Installer's: the developer news, then where to get help. */
 export function NewsPanel({ news, locale }: { news: News[]; locale: string }) {
   const t = useT();
-  const date = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" }) : "");
+  const date = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString(locale, { day: "2-digit", month: "2-digit", year: "numeric" }) : "");
   return (
     <aside className="yi-news">
       <h2>{t("Developer News")}</h2>
@@ -23,8 +23,10 @@ export function NewsPanel({ news, locale }: { news: News[]; locale: string }) {
             {n.title ?? `${n.of} ${n.version}`}
           </button>
           <div className="yi-muted yi-news-meta">
-            {n.of} · {n.version}
-            {n.published && ` · ${date(n.published)}`}
+            <span className="yi-news-of">
+              {n.of} · {n.version}
+            </span>
+            {n.published && <time dateTime={n.published}>{date(n.published)}</time>}
           </div>
         </article>
       ))}
