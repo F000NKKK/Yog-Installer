@@ -26,19 +26,19 @@ pub fn load(home: &Home) -> (Catalog, Option<String>) {
     (catalog, problem)
 }
 
-/// Fetches the latest release's catalog into `cached`, when it reads.
+/// Fetches the latest release's catalog into `cached`, when it reads. No
+/// release yet, or one without a catalog, isn't a problem: the built-in one
+/// is the newest there is then.
 fn refresh(built_in: &Catalog, cached: &std::path::Path) -> Result<(), String> {
-    let installer = built_in
-        .installer
-        .as_ref()
-        .ok_or("no Installer source in the catalog")?;
-    let latest = releases::of(&installer.source)?
-        .into_iter()
-        .next()
-        .ok_or("no Installer release")?;
-    let asset = latest
-        .asset(CATALOG_ASSET)
-        .ok_or("the latest release has no catalog")?;
+    let Some(installer) = &built_in.installer else {
+        return Ok(());
+    };
+    let Some(latest) = releases::of(&installer.source)?.into_iter().next() else {
+        return Ok(());
+    };
+    let Some(asset) = latest.asset(CATALOG_ASSET) else {
+        return Ok(());
+    };
     let text = http::get_text(&asset.url)?;
     Catalog::parse(&text)?;
     if let Some(dir) = cached.parent() {
