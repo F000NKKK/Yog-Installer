@@ -1,0 +1,35 @@
+[workspace]
+resolver = "2"
+members = ["crates/yog-installer-core"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+authors = ["F000NK"]
+license = "AGPL-3.0-only"
+repository = "https://github.com/F000NKKK/Yog-Installer"
+
+[workspace.dependencies]
+yog-installer-core = { path = "crates/yog-installer-core" }
+# Yog's home: what's installed (components.json) and where things go.
+yog-home = "0.2.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "1"
+# HTTPS for releases and downloads (rustls: no system OpenSSL).
+ureq = { version = "3", features = ["json"] }
+semver = "1"
+sha2 = "0.10"
+zip = { version = "9", default-features = false, features = ["deflate"] }
+tar = "0.4"
+flate2 = "1"
+xz2 = "0.1"
+dirs = "7"
+
+# Yog's crates from the sibling checkout, as Yog-IDLE does.
+[patch.crates-io]
+yog-home = { path = "../Yog-Mod-Loader/rust/crates/yog-home" }
+yog-ids = { path = "../Yog-Mod-Loader/rust/crates/yog-ids" }
+yog-data = { path = "../Yog-Mod-Loader/rust/crates/yog-data" }
+yog-data-derive = { path = "../Yog-Mod-Loader/rust/crates/yog-data-derive" }

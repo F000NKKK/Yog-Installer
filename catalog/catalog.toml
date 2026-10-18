@@ -1,0 +1,136 @@
+# Yog Installer's channel: what can be installed — products, their workloads,
+# and the components they're made of. Built into the Installer and refreshed
+# from the latest Yog-Installer release. Versions aren't here: each `source`
+# says where they're published. See docs/design.md.
+
+# Bumped with every change: an Installer takes the newest of its own and the channel's.
+revision = 1
+
+# ── Yog Installer itself: updated before anything else ─────────────────────
+
+[installer]
+name = "Yog Installer"
+program = "yog-installer"
+[installer.source]
+kind = "github"
+repo = "F000NKKK/Yog-Installer"
+assets = { "linux-x86_64" = "_amd64.AppImage", "windows-x86_64" = "_x64-setup.exe", "macos-x86_64" = "_universal.app.tar.gz", "macos-aarch64" = "_universal.app.tar.gz" }
+
+# ── Groups of individual components ────────────────────────────────────────
+
+[[group]]
+id = "build"
+name = "Compilers, build tools and runtimes"
+
+[[group]]
+id = "java"
+name = "Java"
+
+[[group]]
+id = "sdk"
+name = "SDKs and libraries"
+
+# ── Products ───────────────────────────────────────────────────────────────
+
+[[product]]
+id = "yog.idle"
+name = "Yog IDLE"
+description = "The editor, launcher and debugger for Yog mods."
+workloads = ["yog.workload.mods", "yog.workload.loader"]
+# What starts it (on macOS, the .app inside the package).
+program = "yog-idle"
+[product.source]
+kind = "github"
+repo = "F000NKKK/Yog-IDLE"
+# The package each platform runs from: an asset whose name ends so.
+assets = { "linux-x86_64" = "_amd64.AppImage", "windows-x86_64" = "_x64-setup.exe", "macos-x86_64" = "_universal.app.tar.gz", "macos-aarch64" = "_universal.app.tar.gz" }
+
+# ── Workloads ──────────────────────────────────────────────────────────────
+
+[[workload]]
+id = "yog.workload.mods"
+name = "Mod development"
+description = "Write, build, run and debug Yog mods in Rust: the Yog CLI, the Rust toolchain for every platform a .yog carries, and the game to test in."
+icon = "puzzle"
+required = ["yog.cli", "rust.toolchain"]
+recommended = ["rust.targets", "zig", "cargo-zigbuild", "yog.sdk.loader", "yog.jdk.21"]
+optional = ["yog.jdk.17", "yog.jdk.25"]
+
+[[workload]]
+id = "yog.workload.loader"
+name = "Loader development"
+description = "Work on Yog Mod Loader itself: its source and the JDK of every Minecraft version it runs on."
+icon = "layers"
+required = ["yog.sdk.loader", "rust.toolchain", "yog.jdk.17", "yog.jdk.21", "yog.jdk.25"]
+recommended = ["rust.targets", "zig", "cargo-zigbuild", "yog.cli"]
+optional = []
+
+# ── Components ─────────────────────────────────────────────────────────────
+
+[[component]]
+id = "rust.toolchain"
+name = "Rust toolchain"
+description = "rustc and cargo — the version the Yog crates are built with."
+group = "build"
+source = { kind = "rustup", toolchain = "1.99" }
+
+[[component]]
+id = "rust.targets"
+name = "Rust targets for every platform"
+description = "Linux, Windows and macOS (x86_64 and arm64): a .yog carries a library for each."
+group = "build"
+requires = ["rust.toolchain"]
+source = { kind = "rust-targets", toolchain = "1.99", targets = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-gnu", "x86_64-apple-darwin", "aarch64-apple-darwin"] }
+
+[[component]]
+id = "zig"
+name = "Zig"
+description = "The linker that builds every platform's library from one machine."
+group = "build"
+source = { kind = "zig" }
+
+[[component]]
+id = "cargo-zigbuild"
+name = "cargo-zigbuild"
+description = "cargo with zig as the linker."
+group = "build"
+requires = ["rust.toolchain"]
+source = { kind = "crate", name = "cargo-zigbuild" }
+
+[[component]]
+id = "yog.cli"
+name = "Yog CLI"
+description = "yog build, yog run, yog serve — builds a mod into a .yog and runs it."
+group = "build"
+requires = ["rust.toolchain"]
+source = { kind = "crate", name = "yog-cli" }
+
+[[component]]
+id = "yog.jdk.17"
+name = "JDK 17"
+description = "Eclipse Temurin 17 — Minecraft 1.20.1."
+group = "java"
+source = { kind = "adoptium", major = 17 }
+
+[[component]]
+id = "yog.jdk.21"
+name = "JDK 21"
+description = "Eclipse Temurin 21 — Minecraft 1.21.1."
+group = "java"
+source = { kind = "adoptium", major = 21 }
+
+[[component]]
+id = "yog.jdk.25"
+name = "JDK 25"
+description = "Eclipse Temurin 25 — Minecraft 26.x."
+group = "java"
+source = { kind = "adoptium", major = 25 }
+
+[[component]]
+id = "yog.sdk.loader"
+name = "Yog Mod Loader SDK"
+description = "A release of the loader, its every loader and Minecraft version: the games yog run starts."
+group = "sdk"
+# Its dev games build the runtime for this machine from its source.
+requires = ["rust.toolchain"]
+source = { kind = "git", repo = "F000NKKK/Yog-Mod-Loader" }

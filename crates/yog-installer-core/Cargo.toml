@@ -1,0 +1,22 @@
+[package]
+name = "yog-installer-core"
+version = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+description = "Yog Installer's engine: the catalog, live versions, what's installed, selections, compatibility and installs."
+
+[dependencies]
+yog-home = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+toml = { workspace = true }
+ureq = { workspace = true }
+semver = { workspace = true }
+sha2 = { workspace = true }
+zip = { workspace = true }
+tar = { workspace = true }
+flate2 = { workspace = true }
+xz2 = { workspace = true }
+dirs = { workspace = true }
