@@ -102,13 +102,15 @@ export function ModifyWindow({ product, snapshot, settings, onSettings, onApply,
           <span className="yi-muted">{t("Total download")}</span>
           <strong>{plan ? formatBytes(plan.downloadBytes) : "…"}</strong>
         </div>
-        <select className="yi-mode" value={settings.mode} onChange={(e) => onSettings({ ...settings, mode: e.target.value as Mode })}>
-          <option value="installWhileDownloading">{t("Install while downloading")}</option>
-          <option value="downloadAllThenInstall">{t("Download all, then install")}</option>
-        </select>
-        <Button variant="primary" disabled={blocked} onClick={() => selection && onApply(selection)}>
-          {installing ? t("Install") : t("Modify")}
-        </Button>
+        <div className="yi-modify-actions">
+          <select className="yi-mode" value={settings.mode} onChange={(e) => onSettings({ ...settings, mode: e.target.value as Mode })}>
+            <option value="installWhileDownloading">{t("Install while downloading")}</option>
+            <option value="downloadAllThenInstall">{t("Download all, then install")}</option>
+          </select>
+          <Button variant="primary" className="yi-modify-go" disabled={blocked} onClick={() => selection && onApply(selection)}>
+            {installing ? t("Install") : t("Modify")}
+          </Button>
+        </div>
       </footer>
     </div>
   );

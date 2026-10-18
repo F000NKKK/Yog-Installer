@@ -14,8 +14,10 @@ export function DetailsPanel({ workloads, components, reasons, onSet }: { worklo
     const on = why !== undefined;
     return (
       <label key={id} className="yi-detail-row">
-        <input type="checkbox" checked={on} disabled={on && !clearable(why)} onChange={(e) => onSet(id, e.target.checked, why)} />
-        {name(id)}
+        <span className="yi-detail-mark">
+          <input type="checkbox" checked={on} disabled={on && !clearable(why)} onChange={(e) => onSet(id, e.target.checked, why)} />
+        </span>
+        <span>{name(id)}</span>
       </label>
     );
   };
@@ -31,7 +33,10 @@ export function DetailsPanel({ workloads, components, reasons, onSet }: { worklo
           <div className="yi-detail-heading">{t("Included")}</div>
           {w.required.map((id) => (
             <div key={id} className="yi-detail-row yi-detail-row--included">
-              <Icon name="check" size={12} /> {name(id)}
+              <span className="yi-detail-mark">
+                <Icon name="check" size={12} />
+              </span>
+              <span>{name(id)}</span>
             </div>
           ))}
           {w.recommended.length + w.optional.length > 0 && <div className="yi-detail-heading">{t("Optional")}</div>}

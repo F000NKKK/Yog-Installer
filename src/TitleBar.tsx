@@ -9,10 +9,12 @@ export function TitleBar({ notifications, onNotifications }: { notifications: nu
         {t("Yog Installer")}
       </span>
       <div className="yi-titlebar-actions">
-        <IconButton title={t("Notifications")} onClick={onNotifications}>
-          <Icon name="bell" />
+        <span className="yi-bell">
+          <IconButton title={t("Notifications")} onClick={onNotifications}>
+            <Icon name="bell" />
+          </IconButton>
           {notifications > 0 && <span className="yi-badge">{notifications}</span>}
-        </IconButton>
+        </span>
         <WindowControls />
       </div>
     </header>

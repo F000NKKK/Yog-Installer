@@ -38,16 +38,25 @@ body,
   gap: var(--sp-space-xs);
 }
 
+.yi-bell {
+  position: relative;
+  display: flex;
+}
+
 .yi-badge {
   position: absolute;
-  margin: -14px 0 0 14px;
+  top: 2px;
+  right: 2px;
   min-width: 14px;
   padding: 0 3px;
+  box-sizing: border-box;
   border-radius: 7px;
   background: var(--sp-accent);
   color: var(--sp-accent-contrast);
   font-size: var(--sp-font-size-xs);
   line-height: 14px;
+  text-align: center;
+  pointer-events: none;
 }
 
 .yi-self-update {
@@ -109,6 +118,10 @@ body,
   margin: 0;
   font-size: 1.25em;
   font-weight: 600;
+}
+
+.yi-card-size {
+  text-align: center;
 }
 
 .yi-card-version,
