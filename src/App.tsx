@@ -22,6 +22,7 @@ export default function App() {
   const [modifying, setModifying] = useState<Product | null>(null);
   const [settings, setSettings] = usePersisted<ModifySettings>("modify.settings", DEFAULT_SETTINGS);
   const [updatingSelf, setUpdatingSelf] = useState(false);
+  const [checking, setChecking] = useState(false);
 
   const load = useCallback((refresh: boolean) => {
     api.snapshot(refresh).then(
@@ -70,6 +71,21 @@ export default function App() {
     void guard(api.apply(p.id, selection, settings.mode, settings.keepDownloads));
   }
 
+  /** Asks every source again and says what came of it. */
+  async function checkForUpdates() {
+    setChecking(true);
+    try {
+      const s = await api.snapshot(true);
+      setSnapshot(s);
+      const count = s.products.filter((p) => p.updateAvailable).length + (s.installerUpdate ? 1 : 0);
+      notify({ message: count > 0 ? t("Updates available: {count}.", { count }) : t("Everything is up to date.") });
+    } catch (e) {
+      notify({ level: "error", message: String(e) });
+    } finally {
+      setChecking(false);
+    }
+  }
+
   function selfUpdate() {
     setUpdatingSelf(true);
     api.selfUpdate().catch((e) => {
@@ -97,8 +113,8 @@ export default function App() {
           {t("Available")}
         </Tab>
         <span className="yi-tabs-spacer" />
-        <Button variant="ghost" disabled={busy} onClick={() => load(true)}>
-          {t("Check for updates")}
+        <Button variant="ghost" disabled={busy || checking} onClick={() => void checkForUpdates()}>
+          {checking ? t("Checking for updates…") : t("Check for updates")}
         </Button>
       </nav>
       <div className="yi-body">
