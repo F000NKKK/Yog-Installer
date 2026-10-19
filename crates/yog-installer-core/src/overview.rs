@@ -26,6 +26,8 @@ pub struct ProductView {
     pub program: Option<String>,
     /// Its download for this platform (bytes), when known.
     pub size: Option<u64>,
+    /// Its icon's URL.
+    pub icon: Option<String>,
 }
 
 pub fn products(
@@ -50,6 +52,7 @@ pub fn products(
                 notes_url: newest.and_then(|r| r.notes_url.clone()),
                 program: have.and_then(|f| f.path.as_ref()).map(|p| p.display().to_string()),
                 size: newest.and_then(|r| install::asset(&item, r)).map(|a| a.size),
+                icon: p.icon.clone(),
             }
         })
         .collect()

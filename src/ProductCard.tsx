@@ -26,9 +26,7 @@ export function ProductCard({ product, op, busy, actions }: { product: Product; 
 
   return (
     <article className="yi-card">
-      <div className="yi-card-icon">
-        <Icon name="package" size={36} />
-      </div>
+      <div className="yi-card-icon">{product.icon ? <img src={product.icon} alt="" width={40} height={40} /> : <Icon name="package" size={36} />}</div>
       <div className="yi-card-main">
         <h2 className="yi-card-name">{product.name}</h2>
         {version && <div className="yi-card-version">{version}</div>}

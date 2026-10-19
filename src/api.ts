@@ -12,6 +12,8 @@ export interface Product {
   notesUrl: string | null;
   program: string | null;
   size: number | null;
+  /** Its icon's URL. */
+  icon: string | null;
 }
 
 /** `overview::ComponentView` — a component's line. */

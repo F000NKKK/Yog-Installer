@@ -140,6 +140,18 @@ pub(crate) fn ok(
     }
 }
 
+/// `url`'s bytes (a small file: an icon).
+pub fn get_bytes(url: &str) -> Result<Vec<u8>, String> {
+    let resp = ok(
+        url,
+        agent().get(url).call().map_err(|e| format!("{url}: {e}"))?,
+    )?;
+    let mut bytes = Vec::new();
+    std::io::Read::read_to_end(&mut resp.into_body().into_reader(), &mut bytes)
+        .map_err(|e| format!("{url}: {e}"))?;
+    Ok(bytes)
+}
+
 /// `url`'s text.
 pub fn get_text(url: &str) -> Result<String, String> {
     let mut resp = ok(

@@ -38,7 +38,16 @@ pub fn product(
     let program = dir.join(name);
     std::fs::copy(download, &program).map_err(|e| format!("{}: {e}", program.display()))?;
     make_executable(&program)?;
-    launcher::add(&p.id, &p.name, &p.description, &program)?;
+    // Its icon for the desktop entry; an entry without one is still fine.
+    let icon = p
+        .icon
+        .as_deref()
+        .and_then(|url| crate::http::get_bytes(url).ok())
+        .and_then(|png| {
+            let file = dir.join(launcher::ICON_FILE);
+            std::fs::write(&file, png).ok().map(|_| file)
+        });
+    launcher::add(&p.id, &p.name, &p.description, &program, icon.as_deref())?;
     Ok(program)
 }
 

@@ -4,7 +4,7 @@
 # says where they're published. See docs/design.md.
 
 # Bumped with every change: an Installer takes the newest of its own and the channel's.
-revision = 1
+revision = 2
 
 # ── Yog Installer itself: updated before anything else ─────────────────────
 
@@ -39,6 +39,7 @@ description = "The editor, launcher and debugger for Yog mods."
 workloads = ["yog.workload.mods", "yog.workload.loader"]
 # What starts it (on macOS, the .app inside the package).
 program = "yog-idle"
+icon = "https://raw.githubusercontent.com/F000NKKK/Yog-IDLE/master/src-tauri/icons/128x128@2x.png"
 [product.source]
 kind = "github"
 repo = "F000NKKK/Yog-IDLE"

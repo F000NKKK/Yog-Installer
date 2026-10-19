@@ -29,8 +29,14 @@ pub enum Placed {
     Moved(PathBuf),
 }
 
-/// Puts the running Installer (`name`, `program`, at `version`) in its place.
-pub fn ensure(home: &Home, name: &str, program: &str, version: &str) -> Result<Placed, String> {
+/// Puts the running Installer (`name`, `program`, at `version`, its `icon` a PNG) in its place.
+pub fn ensure(
+    home: &Home,
+    name: &str,
+    program: &str,
+    version: &str,
+    icon: &[u8],
+) -> Result<Placed, String> {
     let exe = std::env::current_exe().map_err(|e| e.to_string())?;
     if let Some(app) = exe
         .ancestors()
@@ -54,7 +60,9 @@ pub fn ensure(home: &Home, name: &str, program: &str, version: &str) -> Result<P
         crate::install::make_executable(&staged)?;
         std::fs::rename(&staged, &dest).map_err(|e| format!("{}: {e}", dest.display()))?;
     }
-    launcher::add(INSTALLER, name, COMMENT, &dest)?;
+    let icon_file = home.installer_dir().join(launcher::ICON_FILE);
+    std::fs::write(&icon_file, icon).map_err(|e| format!("{}: {e}", icon_file.display()))?;
+    launcher::add(INSTALLER, name, COMMENT, &dest, Some(&icon_file))?;
     record(home, version, dest.clone())?;
     Ok(if moved {
         Placed::Moved(dest)

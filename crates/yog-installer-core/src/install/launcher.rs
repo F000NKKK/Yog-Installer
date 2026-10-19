@@ -7,6 +7,8 @@ use std::path::{Path, PathBuf};
 pub const APP_EXT: &str = "app";
 /// Where macOS keeps a user's applications, under the home folder.
 const MAC_APPLICATIONS: &str = "Applications";
+/// What a product's or the Installer's icon is kept as, beside it.
+pub const ICON_FILE: &str = "icon.png";
 /// Where Linux desktops look for a user's launcher entries.
 const LINUX_APPLICATIONS: &str = ".local/share/applications";
 
@@ -21,16 +23,25 @@ fn desktop_entry(id: &str) -> Option<PathBuf> {
     })?
 }
 
-/// Lists `program` as `name` among the desktop's applications (Linux).
-pub fn add(id: &str, name: &str, comment: &str, program: &Path) -> Result<(), String> {
+/// Lists `program` as `name` among the desktop's applications (Linux), with `icon` (a PNG).
+pub fn add(
+    id: &str,
+    name: &str,
+    comment: &str,
+    program: &Path,
+    icon: Option<&Path>,
+) -> Result<(), String> {
     let Some(entry) = desktop_entry(id) else {
         return Ok(());
     };
     if let Some(dir) = entry.parent() {
         std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     }
+    let icon = icon
+        .map(|i| format!("Icon={}\n", i.display()))
+        .unwrap_or_default();
     let text = format!(
-        "[Desktop Entry]\nType=Application\nName={name}\nComment={comment}\nExec=\"{}\" %U\nTerminal=false\nCategories=Development;\n",
+        "[Desktop Entry]\nType=Application\nName={name}\nComment={comment}\nExec=\"{}\" %U\n{icon}Terminal=false\nCategories=Development;\n",
         program.display()
     );
     std::fs::write(&entry, text).map_err(|e| format!("{}: {e}", entry.display()))

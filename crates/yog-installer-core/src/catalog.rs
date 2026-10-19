@@ -47,6 +47,9 @@ pub struct Product {
     pub workloads: Vec<String>,
     /// The program that starts it (on macOS, the `.app` inside its package).
     pub program: String,
+    /// Its icon (a PNG's URL), for its card and its desktop entry.
+    #[serde(default)]
+    pub icon: Option<String>,
     pub source: Source,
 }
 

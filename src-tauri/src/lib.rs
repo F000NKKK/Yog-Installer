@@ -9,6 +9,9 @@ use std::sync::Arc;
 use tauri::Manager;
 use yog_installer_core::selfinstall::{self, Placed};
 
+/// The Installer's icon (Yog IDLE's, as Visual Studio Installer wears Visual Studio's), for its desktop entry.
+const ICON: &[u8] = include_bytes!("../icons/128x128@2x.png");
+
 /// Puts the Installer in its place, as Visual Studio Installer does: from
 /// a download, it copies itself into its place and starts from there. Not a
 /// development build's, which isn't installed anywhere.
@@ -22,9 +25,9 @@ fn place_self(app: &tauri::App) {
         return;
     };
     let version = app.package_info().version.to_string();
-    let placed = state
-        .home()
-        .and_then(|home| selfinstall::ensure(home, &installer.name, &installer.program, &version));
+    let placed = state.home().and_then(|home| {
+        selfinstall::ensure(home, &installer.name, &installer.program, &version, ICON)
+    });
     match placed {
         Ok(Placed::Moved(program)) => match commands::start(&program) {
             Ok(()) => app.handle().exit(0),
