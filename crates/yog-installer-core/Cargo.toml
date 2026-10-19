@@ -9,6 +9,7 @@ description = "Yog Installer's engine: the catalog, live versions, what's instal
 
 [dependencies]
 yog-home = { workspace = true }
+substrate-platform = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 toml = { workspace = true }

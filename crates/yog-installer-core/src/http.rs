@@ -49,7 +49,7 @@ fn github_token() -> Option<&'static str> {
                 .ok()
                 .filter(|t| !t.is_empty())
                 .or_else(|| {
-                    let out = crate::platform::command(crate::platform::exe("gh"))
+                    let out = substrate_platform::process::command(crate::platform::exe("gh"))
                         .args(["auth", "token"])
                         .output()
                         .ok()?;
