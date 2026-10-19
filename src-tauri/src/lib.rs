@@ -56,7 +56,7 @@ pub fn run() {
         })
         .manage(state)
         .plugin(
-            Builder::new(INSTALLER.plugin)
+            Builder::<tauri::Wry>::new(INSTALLER.plugin)
                 .invoke_handler(tauri::generate_handler![
                     commands::snapshot,
                     commands::selection_of,
