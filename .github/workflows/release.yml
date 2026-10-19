@@ -13,7 +13,17 @@ permissions:
   contents: write
 
 jobs:
+  # The release first, once: every build then uploads into it. Builds that
+  # each looked for it and created their own made two releases of one tag.
+  release:
+    runs-on: ubuntu-22.04
+    steps:
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release view "${{ github.ref_name }}" -R "${{ github.repository }}" >/dev/null 2>&1 || gh release create "${{ github.ref_name }}" -R "${{ github.repository }}" --title "Yog Installer ${{ github.ref_name }}" --notes "Yog Installer — installs and updates Yog IDLE, the Yog CLI, the loader SDK, JDKs and the Rust toolchain. Download the package for your system below."
+
   build:
+    needs: release
     strategy:
       fail-fast: false
       matrix:
