@@ -10,7 +10,7 @@ use yog_home::components::id::INSTALLER;
 
 /// Releases of each repo shown as news, and news items in all.
 const NEWS_PER_SOURCE: usize = 3;
-const NEWS_MAX: usize = 8;
+const NEWS_MAX: usize = 6;
 
 /// A release in the developer news.
 #[derive(Debug, Clone, Serialize)]
