@@ -1,5 +1,4 @@
-import { openUrl } from "@tauri-apps/plugin-opener";
-import { useT } from "substrate-platform-ui";
+import { openLink, useT } from "substrate-platform-ui";
 import type { News } from "./api";
 
 /** Where "Need help?" leads. */
@@ -19,7 +18,7 @@ export function NewsPanel({ news, locale }: { news: News[]; locale: string }) {
       {news.length === 0 && <p className="yi-muted">{t("No news yet.")}</p>}
       {news.map((n) => (
         <article key={`${n.of}-${n.version}`} className="yi-news-item">
-          <button type="button" className="yi-link yi-news-title" disabled={!n.url} onClick={() => n.url && void openUrl(n.url)}>
+          <button type="button" className="yi-link yi-news-title" disabled={!n.url} onClick={() => n.url && void openLink(n.url)}>
             {n.title ?? `${n.of} ${n.version}`}
           </button>
           <div className="yi-muted yi-news-meta">
@@ -32,7 +31,7 @@ export function NewsPanel({ news, locale }: { news: News[]; locale: string }) {
       ))}
       <h2 className="yi-help-heading">{t("Need help?")}</h2>
       {HELP_LINKS.map((l) => (
-        <button key={l.url} type="button" className="yi-link yi-help-link" onClick={() => void openUrl(l.url)}>
+        <button key={l.url} type="button" className="yi-link yi-help-link" onClick={() => void openLink(l.url)}>
           {t(l.label)}
         </button>
       ))}

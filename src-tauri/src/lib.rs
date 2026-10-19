@@ -45,7 +45,7 @@ fn place_self(app: &tauri::App) {
 pub fn run() {
     let state = Arc::new(state::AppState::new());
     tauri::Builder::default()
-        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_substrate::init())
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             place_self(app);

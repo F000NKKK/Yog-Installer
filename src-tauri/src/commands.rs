@@ -385,24 +385,9 @@ pub fn launch(state: Shared<'_>, product: String) -> Result<(), String> {
     start(&program)
 }
 
-/// macOS opens an application bundle; elsewhere a program runs itself.
-const MAC_OPEN: &str = "open";
-
-/// Starts `program` (a macOS `.app` through `open`).
+/// Starts `program` with the system's environment (Substrate's process helper).
 pub fn start(program: &std::path::Path) -> Result<(), String> {
-    let mut cmd = if cfg!(target_os = "macos") {
-        let mut open = substrate_platform::process::command(MAC_OPEN);
-        open.arg(program);
-        open
-    } else {
-        substrate_platform::process::command(program)
-    };
-    let mut child = cmd
-        .spawn()
-        .map_err(|e| format!("{}: {e}", program.display()))?;
-    // Waited for, so it doesn't stay a zombie while the Installer runs.
-    std::thread::spawn(move || child.wait());
-    Ok(())
+    substrate_platform::process::start(program).map_err(|m| m.to_string())
 }
 
 /// Updates the Installer itself, then starts the new one.

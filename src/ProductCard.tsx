@@ -1,5 +1,4 @@
-import { Button, ContextMenu, Icon, useContextMenu, useT } from "substrate-platform-ui";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { Button, ContextMenu, Icon, useContextMenu, openLink, useT } from "substrate-platform-ui";
 import type { Product } from "./api";
 import { formatBytes } from "./format";
 import type { Operation } from "./useOperation";
@@ -32,7 +31,7 @@ export function ProductCard({ product, op, busy, actions }: { product: Product; 
         {version && <div className="yi-card-version">{version}</div>}
         <p className="yi-card-description">{t(product.description)}</p>
         {product.notesUrl && (
-          <button type="button" className="yi-link" onClick={() => void openUrl(product.notesUrl as string)}>
+          <button type="button" className="yi-link" onClick={() => void openLink(product.notesUrl as string)}>
             {t("Release notes")}
           </button>
         )}
