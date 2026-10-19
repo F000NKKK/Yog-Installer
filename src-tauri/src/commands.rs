@@ -22,6 +22,16 @@ use yog_installer_core::selfupdate::{self, Then};
 /// The one event the window hears an operation's progress on (`src/api.ts` listens to it).
 const PROGRESS_EVENT: &str = "installer-progress";
 
+/// The event the Installer's own update reports its download on (`src/api.ts` listens to it).
+const SELF_UPDATE_EVENT: &str = "installer-self-update";
+
+/// How far the Installer's own update has downloaded.
+#[derive(Clone, Serialize)]
+struct Downloaded {
+    done: u64,
+    total: Option<u64>,
+}
+
 type Shared<'a> = State<'a, Arc<AppState>>;
 
 /// Everything the window shows.
@@ -407,23 +417,8 @@ pub async fn self_update(app: AppHandle, state: Shared<'_>) -> Result<(), String
             .ok_or("the Installer is up to date")?
             .clone();
         let cancel = state.start()?;
-        let product = catalog
-            .installer
-            .as_ref()
-            .map(|i| i.name.clone())
-            .unwrap_or_default();
         let progress = |done, total| {
-            let _ = app.emit(
-                PROGRESS_EVENT,
-                Progress {
-                    product: product.clone(),
-                    event: Event::Downloading {
-                        component: product.clone(),
-                        done,
-                        total,
-                    },
-                },
-            );
+            let _ = app.emit(SELF_UPDATE_EVENT, Downloaded { done, total });
         };
         let then = state.home().and_then(|home| {
             selfupdate::apply(&catalog, &release, &home.cache_dir(), &cancel, &progress)

@@ -126,6 +126,15 @@ export type ProgressEvent =
 /** The event an operation's progress comes on (`commands::PROGRESS_EVENT`). */
 const PROGRESS_EVENT = "installer-progress";
 
+/** The event the Installer's own update reports its download on (`commands::SELF_UPDATE_EVENT`). */
+const SELF_UPDATE_EVENT = "installer-self-update";
+
+/** How far the Installer's own update has downloaded. */
+export interface SelfUpdateProgress {
+  done: number;
+  total: number | null;
+}
+
 export const api = {
   snapshot: (refresh: boolean) => invoke<Snapshot>("snapshot", { refresh }),
   selectionOf: (product: string) => invoke<Selection>("selection_of", { product }),
@@ -139,6 +148,8 @@ export const api = {
   pause: (paused: boolean) => invoke<void>("pause", { paused }),
   launch: (product: string) => invoke<void>("launch", { product }),
   selfUpdate: () => invoke<void>("self_update"),
+  onSelfUpdate: (handler: (progress: SelfUpdateProgress) => void): Promise<UnlistenFn> =>
+    listen<SelfUpdateProgress>(SELF_UPDATE_EVENT, (e) => handler(e.payload)),
   onProgress: (handler: (product: string, event: ProgressEvent) => void): Promise<UnlistenFn> =>
     listen<{ product: string; event: ProgressEvent }>(PROGRESS_EVENT, (e) => handler(e.payload.product, e.payload.event)),
 };

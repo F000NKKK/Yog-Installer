@@ -4,6 +4,7 @@ import { api, type Product, type Selection, type Snapshot } from "./api";
 import { ModifyWindow, type ModifySettings } from "./modify/ModifyWindow";
 import { NewsPanel } from "./NewsPanel";
 import { ProductCard } from "./ProductCard";
+import { SelfUpdateDialog } from "./SelfUpdateDialog";
 import { TitleBar } from "./TitleBar";
 import { usePersisted } from "./usePersisted";
 import { useOperation } from "./useOperation";
@@ -21,7 +22,7 @@ export default function App() {
   const [page, setPage] = useState<Page>("installed");
   const [modifying, setModifying] = useState<Product | null>(null);
   const [settings, setSettings] = usePersisted<ModifySettings>("modify.settings", DEFAULT_SETTINGS);
-  const [updatingSelf, setUpdatingSelf] = useState(false);
+  const [selfUpdateLater, setSelfUpdateLater] = useState(false);
   const [checking, setChecking] = useState(false);
 
   const load = useCallback((refresh: boolean) => {
@@ -51,7 +52,7 @@ export default function App() {
   const installed = snapshot?.products.filter((p) => p.installed !== null) ?? [];
   const available = snapshot?.products.filter((p) => p.installed === null) ?? [];
   const shown = page === "installed" ? installed : available;
-  const busy = operation.running || updatingSelf;
+  const busy = operation.running;
 
   const guard = (promise: Promise<void>) => promise.catch((e) => notify({ level: "error", message: String(e) }));
 
@@ -77,6 +78,7 @@ export default function App() {
     try {
       const s = await api.snapshot(true);
       setSnapshot(s);
+      if (s.installerUpdate) setSelfUpdateLater(false);
       const count = s.products.filter((p) => p.updateAvailable).length + (s.installerUpdate ? 1 : 0);
       notify({ message: count > 0 ? t("Updates available: {count}.", { count }) : t("Everything is up to date.") });
     } catch (e) {
@@ -86,22 +88,14 @@ export default function App() {
     }
   }
 
-  function selfUpdate() {
-    setUpdatingSelf(true);
-    api.selfUpdate().catch((e) => {
-      setUpdatingSelf(false);
-      notify({ level: "error", message: String(e) });
-    });
-  }
-
   return (
     <div className="yi-app">
       <TitleBar notifications={snapshot?.problems ?? []} />
-      {snapshot?.installerUpdate && (
+      {snapshot?.installerUpdate && selfUpdateLater && (
         <div className="yi-self-update">
           <span>{t("A newer Yog Installer is out ({version}). It updates itself before anything else.", { version: snapshot.installerUpdate })}</span>
-          <Button variant="primary" disabled={busy} onClick={selfUpdate}>
-            {updatingSelf ? t("Updating…") : t("Update")}
+          <Button variant="primary" disabled={busy} onClick={() => setSelfUpdateLater(false)}>
+            {t("Update")}
           </Button>
         </div>
       )}
@@ -148,6 +142,9 @@ export default function App() {
       <footer className="yi-statusbar">{snapshot && t("Installer version {version}", { version: snapshot.version })}</footer>
       {modifying && snapshot && (
         <ModifyWindow product={modifying} snapshot={snapshot} settings={settings} onSettings={setSettings} onApply={(s) => apply(modifying, s)} onClose={() => setModifying(null)} />
+      )}
+      {snapshot?.installerUpdate && !selfUpdateLater && !busy && (
+        <SelfUpdateDialog current={snapshot.version} next={snapshot.installerUpdate} onLater={() => setSelfUpdateLater(true)} />
       )}
       <DialogHost />
       <NotificationHost />

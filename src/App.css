@@ -71,6 +71,16 @@ body,
   flex: 1;
 }
 
+.yi-self-update-dialog {
+  width: 440px;
+}
+
+.yi-self-update-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-space-xs);
+}
+
 .yi-tabs {
   display: flex;
   align-items: center;

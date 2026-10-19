@@ -23,6 +23,12 @@ registerTranslations(
     "A newer Yog Installer is out ({version}). It updates itself before anything else.":
       "Вышла новая версия Yog Installer ({version}). Он обновляется раньше всего остального.",
     "Updating…": "Обновление…",
+    "Yog Installer needs to be updated": "Требуется обновить Yog Installer",
+    "Before you go on, Yog Installer updates itself from {current} to {next}. It starts again by itself when it's done.":
+      "Прежде чем продолжить, Yog Installer обновится с версии {current} до {next}. По завершении он перезапустится сам.",
+    "Downloading: {done} of {total}": "Скачивание: {done} из {total}",
+    "Starting the new version…": "Запуск новой версии…",
+    "Not now": "Не сейчас",
     "Installer version {version}": "Версия установщика {version}",
     Install: "Установить",
     Update: "Обновить",
