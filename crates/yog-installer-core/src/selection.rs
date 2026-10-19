@@ -32,12 +32,14 @@ impl Selection {
                 }
             }
         }
+        // Only the catalog's components: what else is installed — products,
+        // the Installer itself — isn't a checkbox.
         let covered = s.components(catalog);
         s.checked.extend(
             installed
                 .iter()
                 .map(|f| f.id.clone())
-                .filter(|id| !covered.contains(id)),
+                .filter(|id| catalog.component(id).is_some() && !covered.contains(id)),
         );
         s
     }
@@ -212,6 +214,7 @@ fn in_order(catalog: &Catalog, ids: &BTreeSet<String>) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use yog_home::components::id::INSTALLER;
 
     fn found(id: &str, version: &str, managed: bool) -> Found {
         Found {
@@ -285,5 +288,14 @@ mod tests {
         assert!(s.workloads.contains("yog.workload.mods"));
         assert!(s.unchecked.contains("rust.targets"));
         assert!(s.checked.contains("yog.jdk.17"));
+    }
+
+    #[test]
+    fn what_isnt_a_component_isnt_a_checkbox() {
+        let catalog = Catalog::built_in();
+        let installed = [found(INSTALLER, "1.1.1", false), found("yog.idle", "2.0.2", false)];
+        let s = Selection::of_installed(&catalog, "yog.idle", &installed);
+        assert!(!s.checked.contains(INSTALLER));
+        assert!(!s.checked.contains("yog.idle"));
     }
 }
