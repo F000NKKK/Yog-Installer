@@ -63,7 +63,7 @@ pub fn apply(
         return replace_app(&download, kind, cancel);
     }
     if cfg!(windows) {
-        std::process::Command::new(&download)
+        crate::platform::command(&download)
             .arg(NSIS_SILENT)
             .spawn()
             .map_err(|e| format!("{}: {e}", download.display()))?;

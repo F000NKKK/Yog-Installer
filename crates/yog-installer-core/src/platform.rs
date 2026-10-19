@@ -43,3 +43,26 @@ pub fn rustup_host() -> Option<&'static str> {
         _ => None,
     }
 }
+
+/// What an AppImage's runtime tells the program inside about itself.
+const APPIMAGE_VARS: [&str; 4] = ["APPDIR", "APPIMAGE", "ARGV0", "OWD"];
+
+/// A command for `program` with the system's own environment: nothing an
+/// AppImage set up for the Installer inside it (`LD_LIBRARY_PATH` into its
+/// mount, its GTK and GIO modules, ...) — a program started with those loads
+/// the Installer's libraries instead of its own, and fails.
+pub fn command(program: impl AsRef<std::ffi::OsStr>) -> std::process::Command {
+    let mut cmd = std::process::Command::new(program);
+    if let Some(appdir) = std::env::var_os("APPDIR").filter(|d| !d.is_empty()) {
+        let appdir = appdir.to_string_lossy().into_owned();
+        for (key, value) in std::env::vars_os() {
+            if value.to_string_lossy().contains(&appdir) {
+                cmd.env_remove(key);
+            }
+        }
+        for key in APPIMAGE_VARS {
+            cmd.env_remove(key);
+        }
+    }
+    cmd
+}

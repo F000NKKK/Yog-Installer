@@ -75,7 +75,7 @@ fn place_app(home: &Home, app: &Path, version: &str) -> Result<Placed, String> {
     }
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let _ = std::fs::remove_dir_all(&dest);
-    let status = std::process::Command::new(DITTO)
+    let status = crate::platform::command(DITTO)
         .arg(app)
         .arg(&dest)
         .status()

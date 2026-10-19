@@ -381,11 +381,11 @@ const MAC_OPEN: &str = "open";
 /// Starts `program` (a macOS `.app` through `open`).
 pub fn start(program: &std::path::Path) -> Result<(), String> {
     let mut cmd = if cfg!(target_os = "macos") {
-        let mut open = std::process::Command::new(MAC_OPEN);
+        let mut open = yog_installer_core::platform::command(MAC_OPEN);
         open.arg(program);
         open
     } else {
-        std::process::Command::new(program)
+        yog_installer_core::platform::command(program)
     };
     cmd.spawn()
         .map(|_| ())

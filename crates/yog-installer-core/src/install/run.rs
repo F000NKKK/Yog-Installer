@@ -7,7 +7,7 @@
 use crate::progress::{CANCELLED, Cancel};
 use std::io::{BufRead, BufReader};
 use std::path::Path;
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 use std::sync::mpsc;
 use std::time::Duration;
 
@@ -22,7 +22,7 @@ pub fn tool(
     line: &dyn Fn(String),
 ) -> Result<(), String> {
     let name = program.display().to_string();
-    let mut command = Command::new(program);
+    let mut command = crate::platform::command(program);
     #[cfg(unix)]
     std::os::unix::process::CommandExt::process_group(&mut command, 0);
     let mut child = command
