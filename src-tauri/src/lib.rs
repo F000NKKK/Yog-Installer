@@ -6,6 +6,7 @@ pub mod host;
 mod pending;
 mod state;
 
+use substrate_platform::sync::Locked;
 use std::sync::Arc;
 use host::commands::INSTALLER;
 use tauri::Manager;
@@ -34,13 +35,12 @@ fn place_self(app: &tauri::App) {
     match placed {
         Ok(Placed::Moved(program)) => match commands::start(&program) {
             Ok(()) => app.handle().exit(0),
-            Err(e) => state.notices.lock().expect("notices lock").push(e),
+            Err(e) => state.notices.locked().push(e),
         },
         Ok(Placed::Here) => {}
         Err(e) => state
             .problems
-            .lock()
-            .expect("problems lock")
+            .locked()
             .push(format!("Yog Installer couldn't install itself: {e}")),
     }
 }

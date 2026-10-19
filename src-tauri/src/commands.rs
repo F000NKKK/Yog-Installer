@@ -1,6 +1,7 @@
 //! The window's commands: what it shows, what a selection changes, and the
 //! operations — install, modify, update, uninstall, launch, update the Installer.
 
+use substrate_platform::sync::Locked;
 use crate::host::events;
 use crate::pending::{self, Pending};
 use crate::state::AppState;
@@ -106,21 +107,20 @@ pub async fn snapshot(
             groups: catalog.groups,
             workloads: catalog.workloads,
             installer_update,
-            pending: if state.running.lock().expect("running lock").is_some() {
+            pending: if state.running.locked().is_some() {
                 None
             } else {
                 pending::read(state.home()?)
             },
-            news: state.news.lock().expect("news lock").clone(),
+            news: state.news.locked().clone(),
             problems: {
-                let notices = state.notices.lock().expect("notices lock").clone();
+                let notices = state.notices.locked().clone();
                 notices
                     .into_iter()
                     .chain(
                         state
                             .problems
-                            .lock()
-                            .expect("problems lock")
+                            .locked()
                             .iter()
                             .cloned(),
                     )
@@ -357,7 +357,7 @@ pub async fn uninstall(app: AppHandle, state: Shared<'_>, product: String) -> Re
 
 #[tauri::command]
 pub fn cancel(state: Shared<'_>) {
-    if let Some(c) = state.running.lock().expect("running lock").as_ref() {
+    if let Some(c) = state.running.locked().as_ref() {
         c.cancel();
     }
 }
@@ -365,7 +365,7 @@ pub fn cancel(state: Shared<'_>) {
 /// Pauses or resumes the running operation.
 #[tauri::command]
 pub fn pause(state: Shared<'_>, paused: bool) {
-    if let Some(c) = state.running.lock().expect("running lock").as_ref() {
+    if let Some(c) = state.running.locked().as_ref() {
         c.set_paused(paused);
     }
 }

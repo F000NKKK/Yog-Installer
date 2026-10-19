@@ -1,6 +1,7 @@
 //! What the Installer holds between commands: Yog's home, the catalog, the
 //! newest releases last asked for, and the operation running (to cancel it).
 
+use substrate_platform::sync::Locked;
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 use yog_home::Home;
@@ -48,11 +49,11 @@ impl AppState {
     }
 
     pub fn catalog(&self) -> Catalog {
-        self.catalog.lock().expect("catalog lock").clone()
+        self.catalog.locked().clone()
     }
 
     pub fn latest(&self) -> BTreeMap<String, Release> {
-        self.latest.lock().expect("latest lock").clone()
+        self.latest.locked().clone()
     }
 
     /// Everything installed, by the Installer or before it.
@@ -69,16 +70,16 @@ impl AppState {
         let (catalog, problem) = yog_installer_core::channel::load(self.home()?);
         let mut latest = yog_installer_core::latest::fetch(&catalog);
         latest.problems.extend(problem);
-        *self.catalog.lock().expect("catalog lock") = catalog;
-        *self.latest.lock().expect("latest lock") = latest.newest;
-        *self.news.lock().expect("news lock") = latest.news;
-        *self.problems.lock().expect("problems lock") = latest.problems;
+        *self.catalog.locked() = catalog;
+        *self.latest.locked() = latest.newest;
+        *self.news.locked() = latest.news;
+        *self.problems.locked() = latest.problems;
         Ok(())
     }
 
     /// Starts an operation, unless one is running; its cancel.
     pub fn start(&self) -> Result<Cancel, String> {
-        let mut running = self.running.lock().expect("running lock");
+        let mut running = self.running.locked();
         if running.is_some() {
             return Err("Another operation is running.".into());
         }
@@ -88,6 +89,6 @@ impl AppState {
     }
 
     pub fn finish(&self) {
-        *self.running.lock().expect("running lock") = None;
+        *self.running.locked() = None;
     }
 }
