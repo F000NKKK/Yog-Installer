@@ -12,6 +12,7 @@ name = "yog_installer_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
+substrate-platform = { workspace = true }
 tauri-build = { version = "2", features = [] }
 
 [dependencies]

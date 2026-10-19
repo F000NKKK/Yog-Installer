@@ -1,5 +1,6 @@
-import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { invokeCommand } from "substrate-platform-ui";
+import { events, installer } from "./host.generated";
 
 /** `overview::ProductView` — a product card. */
 export interface Product {
@@ -123,11 +124,7 @@ export type ProgressEvent =
   | { kind: "removed"; component: string }
   | { kind: "finished"; ok: boolean; cancelled: boolean; error: string | null };
 
-/** The event an operation's progress comes on (`commands::PROGRESS_EVENT`). */
-const PROGRESS_EVENT = "installer-progress";
 
-/** The event the Installer's own update reports its download on (`commands::SELF_UPDATE_EVENT`). */
-const SELF_UPDATE_EVENT = "installer-self-update";
 
 /** How far the Installer's own update has downloaded. */
 export interface SelfUpdateProgress {
@@ -136,20 +133,20 @@ export interface SelfUpdateProgress {
 }
 
 export const api = {
-  snapshot: (refresh: boolean) => invoke<Snapshot>("snapshot", { refresh }),
-  selectionOf: (product: string) => invoke<Selection>("selection_of", { product }),
-  plan: (product: string, selection: Selection) => invoke<PlanView>("plan", { product, selection }),
-  apply: (product: string, selection: Selection, mode: Mode, keepDownloads: boolean) => invoke<void>("apply", { product, selection, mode, keepDownloads }),
-  uninstall: (product: string) => invoke<void>("uninstall", { product }),
-  repair: (product: string) => invoke<void>("repair", { product }),
-  resume: () => invoke<void>("resume"),
-  forgetPending: () => invoke<void>("forget_pending"),
-  cancel: () => invoke<void>("cancel"),
-  pause: (paused: boolean) => invoke<void>("pause", { paused }),
-  launch: (product: string) => invoke<void>("launch", { product }),
-  selfUpdate: () => invoke<void>("self_update"),
+  snapshot: (refresh: boolean) => invokeCommand<Snapshot>(installer.installer.snapshot, { refresh }),
+  selectionOf: (product: string) => invokeCommand<Selection>(installer.installer.selectionOf, { product }),
+  plan: (product: string, selection: Selection) => invokeCommand<PlanView>(installer.installer.plan, { product, selection }),
+  apply: (product: string, selection: Selection, mode: Mode, keepDownloads: boolean) => invokeCommand<void>(installer.installer.apply, { product, selection, mode, keepDownloads }),
+  uninstall: (product: string) => invokeCommand<void>(installer.installer.uninstall, { product }),
+  repair: (product: string) => invokeCommand<void>(installer.installer.repair, { product }),
+  resume: () => invokeCommand<void>(installer.installer.resume),
+  forgetPending: () => invokeCommand<void>(installer.installer.forgetPending),
+  cancel: () => invokeCommand<void>(installer.installer.cancel),
+  pause: (paused: boolean) => invokeCommand<void>(installer.installer.pause, { paused }),
+  launch: (product: string) => invokeCommand<void>(installer.installer.launch, { product }),
+  selfUpdate: () => invokeCommand<void>(installer.installer.selfUpdate),
   onSelfUpdate: (handler: (progress: SelfUpdateProgress) => void): Promise<UnlistenFn> =>
-    listen<SelfUpdateProgress>(SELF_UPDATE_EVENT, (e) => handler(e.payload)),
+    listen<SelfUpdateProgress>(events.selfUpdate, (e) => handler(e.payload)),
   onProgress: (handler: (product: string, event: ProgressEvent) => void): Promise<UnlistenFn> =>
-    listen<{ product: string; event: ProgressEvent }>(PROGRESS_EVENT, (e) => handler(e.payload.product, e.payload.event)),
+    listen<{ product: string; event: ProgressEvent }>(events.progress, (e) => handler(e.payload.product, e.payload.event)),
 };

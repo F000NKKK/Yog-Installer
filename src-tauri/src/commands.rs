@@ -1,6 +1,7 @@
 //! The window's commands: what it shows, what a selection changes, and the
 //! operations — install, modify, update, uninstall, launch, update the Installer.
 
+use crate::host::events;
 use crate::pending::{self, Pending};
 use crate::state::AppState;
 use serde::Serialize;
@@ -19,11 +20,7 @@ use yog_installer_core::releases;
 use yog_installer_core::selection::{self, Change, Selection, Why};
 use yog_installer_core::selfupdate::{self, Then};
 
-/// The one event the window hears an operation's progress on (`src/api.ts` listens to it).
-const PROGRESS_EVENT: &str = "installer-progress";
 
-/// The event the Installer's own update reports its download on (`src/api.ts` listens to it).
-const SELF_UPDATE_EVENT: &str = "installer-self-update";
 
 /// How far the Installer's own update has downloaded.
 #[derive(Clone, Serialize)]
@@ -205,7 +202,7 @@ fn run(
     std::thread::spawn(move || {
         let sink = |event: Event| {
             let _ = app.emit(
-                PROGRESS_EVENT,
+                events::PROGRESS,
                 Progress {
                     product: product.clone(),
                     event,
@@ -403,7 +400,7 @@ pub async fn self_update(app: AppHandle, state: Shared<'_>) -> Result<(), String
             .clone();
         let cancel = state.start()?;
         let progress = |done, total| {
-            let _ = app.emit(SELF_UPDATE_EVENT, Downloaded { done, total });
+            let _ = app.emit(events::SELF_UPDATE, Downloaded { done, total });
         };
         let then = state.home().and_then(|home| {
             selfupdate::apply(&catalog, &release, &home.cache_dir(), &cancel, &progress)

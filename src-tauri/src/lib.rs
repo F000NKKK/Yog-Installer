@@ -2,11 +2,14 @@
 //! (`yog-installer-core`), through the commands in [`commands`].
 
 mod commands;
+pub mod host;
 mod pending;
 mod state;
 
 use std::sync::Arc;
+use host::commands::INSTALLER;
 use tauri::Manager;
+use tauri::plugin::Builder;
 use yog_installer_core::selfinstall::{self, Placed};
 
 /// The Installer's icon (Yog IDLE's, as Visual Studio Installer wears Visual Studio's), for its desktop entry.
@@ -52,20 +55,24 @@ pub fn run() {
             Ok(())
         })
         .manage(state)
-        .invoke_handler(tauri::generate_handler![
-            commands::snapshot,
-            commands::selection_of,
-            commands::plan,
-            commands::apply,
-            commands::uninstall,
-            commands::repair,
-            commands::resume,
-            commands::forget_pending,
-            commands::cancel,
-            commands::pause,
-            commands::launch,
-            commands::self_update,
-        ])
+        .plugin(
+            Builder::new(INSTALLER.plugin)
+                .invoke_handler(tauri::generate_handler![
+                    commands::snapshot,
+                    commands::selection_of,
+                    commands::plan,
+                    commands::apply,
+                    commands::uninstall,
+                    commands::repair,
+                    commands::resume,
+                    commands::forget_pending,
+                    commands::cancel,
+                    commands::pause,
+                    commands::launch,
+                    commands::self_update,
+                ])
+                .build(),
+        )
         .run(tauri::generate_context!())
         .expect("error while running Yog Installer");
 }
