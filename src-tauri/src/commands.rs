@@ -387,9 +387,12 @@ pub fn start(program: &std::path::Path) -> Result<(), String> {
     } else {
         yog_installer_core::platform::command(program)
     };
-    cmd.spawn()
-        .map(|_| ())
-        .map_err(|e| format!("{}: {e}", program.display()))
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| format!("{}: {e}", program.display()))?;
+    // Waited for, so it doesn't stay a zombie while the Installer runs.
+    std::thread::spawn(move || child.wait());
+    Ok(())
 }
 
 /// Updates the Installer itself, then starts the new one.

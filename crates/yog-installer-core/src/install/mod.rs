@@ -189,6 +189,20 @@ pub fn install(
     }
 }
 
+/// Removes `item`'s `version` an update replaced (installed at `path`): its
+/// files only — a product's desktop entry and links are the new version's now.
+pub fn remove_replaced(
+    item: &Item,
+    version: &str,
+    path: &Path,
+    ctx: &Context,
+) -> Result<(), String> {
+    match item {
+        Item::Product(p) => files::remove_dir(&ctx.home.product_dir(&p.id, version)),
+        Item::Component { .. } => remove(item, version, path, ctx),
+    }
+}
+
 /// Removes `item` at `version`, installed at `path`.
 pub fn remove(item: &Item, version: &str, path: &Path, ctx: &Context) -> Result<(), String> {
     match (item, item.source()) {

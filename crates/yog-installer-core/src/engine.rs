@@ -175,7 +175,7 @@ fn replace_old(
         .find(|c| c.id == id && c.version == from)
         .map(|c| c.path.clone());
     if let Some(old) = old.filter(|o| o != new && !in_place(the.source())) {
-        install::remove(the, from, &old, ctx)?;
+        install::remove_replaced(the, from, &old, ctx)?;
     }
     components.remove(id, from);
     Ok(())
