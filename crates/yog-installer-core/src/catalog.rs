@@ -124,9 +124,9 @@ impl Catalog {
         Ok(catalog)
     }
 
-    /// The catalog built in.
+    /// The catalog built in (its test checks it parses; empty if it didn't).
     pub fn built_in() -> Self {
-        Self::parse(BUILT_IN).expect("the built-in catalog is checked by its test")
+        Self::parse(BUILT_IN).unwrap_or_default()
     }
 
     pub fn product(&self, id: &str) -> Option<&Product> {

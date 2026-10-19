@@ -45,7 +45,7 @@ fn place_self(app: &tauri::App) {
     }
 }
 
-pub fn run() {
+pub fn run() -> tauri::Result<()> {
     let state = Arc::new(state::AppState::new());
     tauri::Builder::default()
         .plugin(tauri_plugin_substrate::init())
@@ -74,5 +74,4 @@ pub fn run() {
                 .build(),
         )
         .run(tauri::generate_context!())
-        .expect("error while running Yog Installer");
 }
