@@ -7,7 +7,7 @@ use crate::install::archive::{self, Kind};
 use crate::progress::Cancel;
 use crate::releases::Release;
 use crate::selfinstall::APPIMAGE_ENV;
-use crate::{compat, platform};
+use crate::compat;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use yog_home::components::id::INSTALLER;
@@ -46,7 +46,7 @@ pub fn apply(
         return Err("the Installer isn't a GitHub release".into());
     };
     let suffix = assets
-        .get(&platform::tag())
+        .get(&yog_ids::platform::host_tag())
         .ok_or("no Installer for this platform")?;
     let asset = release
         .asset_ending(suffix)

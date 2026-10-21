@@ -4825,6 +4825,8 @@ dependencies = [
  "toml 1.1.8+spec-1.1.0",
  "yog-data-derive",
  "yog-ids",
+ "yog-logging",
+ "yog-sync",
 ]
 
 [[package]]
@@ -4887,8 +4889,20 @@ dependencies = [
  "toml 1.1.8+spec-1.1.0",
  "ureq",
  "yog-home",
+ "yog-ids",
  "zip",
 ]
+
+[[package]]
+name = "yog-logging"
+version = "0.1.1"
+dependencies = [
+ "yog-sync",
+]
+
+[[package]]
+name = "yog-sync"
+version = "0.2.0"
 
 [[package]]
 name = "yoke"

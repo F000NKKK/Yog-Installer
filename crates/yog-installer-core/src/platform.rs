@@ -1,11 +1,5 @@
 //! This machine's platform, in the words Yog's releases use.
 
-/// `linux-x86_64`, `windows-x86_64`, `macos-aarch64`, … — the tag Yog's
-/// natives and the catalog's per-platform assets are keyed by.
-pub fn tag() -> String {
-    format!("{}-{}", std::env::consts::OS, std::env::consts::ARCH)
-}
-
 /// An executable's file name here (`.exe` on Windows).
 pub fn exe(name: &str) -> String {
     format!("{name}{}", std::env::consts::EXE_SUFFIX)

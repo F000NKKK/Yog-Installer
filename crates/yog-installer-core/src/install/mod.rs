@@ -9,7 +9,6 @@ pub mod run;
 mod tools;
 
 use crate::catalog::{Product, Source};
-use crate::platform;
 use crate::progress::{Cancel, Event, Sink};
 use crate::releases::{Asset, Release, SOURCE_ARCHIVE};
 use archive::Kind;
@@ -72,7 +71,7 @@ impl Item<'_> {
 pub fn asset<'r>(item: &Item, release: &'r Release) -> Option<&'r Asset> {
     match item.source() {
         Source::Github { assets, .. } => assets
-            .get(&platform::tag())
+            .get(&yog_ids::platform::host_tag())
             .and_then(|suffix| release.asset_ending(suffix)),
         Source::Git { .. } => release.asset(SOURCE_ARCHIVE),
         Source::Adoptium { .. } | Source::Zig => release.assets.first(),
