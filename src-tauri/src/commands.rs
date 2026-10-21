@@ -1,13 +1,13 @@
 //! The window's commands: what it shows, what a selection changes, and the
 //! operations — install, modify, update, uninstall, launch, update the Installer.
 
-use substrate_platform::sync::Locked;
 use crate::host::events;
 use crate::pending::{self, Pending};
 use crate::state::AppState;
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
+use substrate_platform::sync::Locked;
 use tauri::{AppHandle, Emitter, State};
 use yog_installer_core::catalog::{Group, Workload};
 use yog_installer_core::compat::Conflict;
@@ -20,8 +20,6 @@ use yog_installer_core::progress::{CANCELLED, Event};
 use yog_installer_core::releases;
 use yog_installer_core::selection::{self, Change, Selection, Why};
 use yog_installer_core::selfupdate::{self, Then};
-
-
 
 /// How far the Installer's own update has downloaded.
 #[derive(Clone, Serialize)]
@@ -117,13 +115,7 @@ pub async fn snapshot(
                 let notices = state.notices.locked().clone();
                 notices
                     .into_iter()
-                    .chain(
-                        state
-                            .problems
-                            .locked()
-                            .iter()
-                            .cloned(),
-                    )
+                    .chain(state.problems.locked().iter().cloned())
                     .collect()
             },
             version,

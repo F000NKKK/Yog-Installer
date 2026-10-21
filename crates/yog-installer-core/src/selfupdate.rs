@@ -3,11 +3,11 @@
 //! the Installer starts again.
 
 use crate::catalog::Catalog;
+use crate::compat;
 use crate::install::archive::{self, Kind};
 use crate::progress::Cancel;
 use crate::releases::Release;
 use crate::selfinstall::APPIMAGE_ENV;
-use crate::compat;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use yog_home::components::id::INSTALLER;

@@ -1,9 +1,9 @@
 //! What the Installer holds between commands: Yog's home, the catalog, the
 //! newest releases last asked for, and the operation running (to cancel it).
 
-use substrate_platform::sync::Locked;
 use std::collections::BTreeMap;
 use std::sync::Mutex;
+use substrate_platform::sync::Locked;
 use yog_home::Home;
 use yog_installer_core::catalog::Catalog;
 use yog_installer_core::detect::{self, Found, RealSystem};

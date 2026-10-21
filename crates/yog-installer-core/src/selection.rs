@@ -293,7 +293,10 @@ mod tests {
     #[test]
     fn what_isnt_a_component_isnt_a_checkbox() {
         let catalog = Catalog::built_in();
-        let installed = [found(INSTALLER, "1.1.1", false), found("yog.idle", "2.0.2", false)];
+        let installed = [
+            found(INSTALLER, "1.1.1", false),
+            found("yog.idle", "2.0.2", false),
+        ];
         let s = Selection::of_installed(&catalog, "yog.idle", &installed);
         assert!(!s.checked.contains(INSTALLER));
         assert!(!s.checked.contains("yog.idle"));
