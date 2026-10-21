@@ -1,18 +1,17 @@
 //! The install or modify running, written down while it runs: when the
 //! Installer stops before it ends (a crash, a power cut), the next start
 //! offers to go on with it — what's installed by then is in
-//! `components.json`, and downloads resume where they stopped.
+//! `components.ydata`, and downloads resume where they stopped.
 
-use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use yog_home::Home;
 use yog_installer_core::engine::Mode;
 use yog_installer_core::selection::Selection;
 
 /// The journal, in the Installer's cache.
-const FILE: &str = "pending.json";
+const FILE: &str = yog_ids::concatcp!("pending", yog_ids::sep::EXT, yog_ids::Format::Data.ext());
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, yog_data::Schema)]
 #[serde(rename_all = "camelCase")]
 pub struct Pending {
     pub product: String,
@@ -26,7 +25,7 @@ fn path(home: &Home) -> PathBuf {
 }
 
 pub fn read(home: &Home) -> Option<Pending> {
-    serde_json::from_str(&std::fs::read_to_string(path(home)).ok()?).ok()
+    yog_data::read_bytes(&std::fs::read(path(home)).ok()?).ok()
 }
 
 pub fn write(home: &Home, pending: &Pending) -> Result<(), String> {
@@ -34,8 +33,8 @@ pub fn write(home: &Home, pending: &Pending) -> Result<(), String> {
     if let Some(dir) = file.parent() {
         std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     }
-    let text = serde_json::to_string(pending).map_err(|e| e.to_string())?;
-    std::fs::write(&file, text).map_err(|e| format!("{}: {e}", file.display()))
+    std::fs::write(&file, yog_data::to_bytes(pending))
+        .map_err(|e| format!("{}: {e}", file.display()))
 }
 
 pub fn clear(home: &Home) {

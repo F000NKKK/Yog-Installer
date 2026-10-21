@@ -114,7 +114,7 @@ pub fn unpacking(item: &Item, release: &Release, ctx: &Context) -> Option<Unpack
     })
 }
 
-/// Moves what was unpacked into its place; where `components.json` says it is
+/// Moves what was unpacked into its place; where `components.ydata` says it is
 /// (a JDK's home, a macOS application linked into ~/Applications).
 pub fn finish(
     item: &Item,
@@ -148,7 +148,7 @@ pub fn finish(
 }
 
 /// Installs `item` at `release` (`download`: its asset, already fetched);
-/// where it went, for `components.json`.
+/// where it went, for `components.ydata`.
 pub fn install(
     item: &Item,
     release: &Release,

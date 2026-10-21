@@ -15,7 +15,7 @@ Visual Studio Installer does for Visual Studio.
 - **Updates itself** first, then the rest.
 
 Everything goes under Yog's home (`~/.yog`, or `$YOG_HOME`) and is listed in
-`~/.yog/components.json`, which `yog run` and Yog IDLE read. A machine's own
+`~/.yog/components.ydata`, which `yog run` and Yog IDLE read. A machine's own
 overrides — a loader checkout of its own, its JDKs, its graphics card's
 environment — go in `~/.yog/local.toml`, which the Installer never touches.
 

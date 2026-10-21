@@ -1,4 +1,4 @@
-//! What's installed: what the Installer put there (`components.json`), and
+//! What's installed: what the Installer put there (`components.ydata`), and
 //! what was there before it — rustup's toolchains, `cargo install`ed tools,
 //! the system's JDKs, a zig on `PATH`. Only reads.
 

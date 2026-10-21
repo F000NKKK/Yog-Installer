@@ -1,5 +1,5 @@
 //! Carrying out a plan: each change downloaded, installed and recorded in
-//! `components.json`, with progress events, until it's done, fails or is cancelled.
+//! `components.ydata`, with progress events, until it's done, fails or is cancelled.
 
 use crate::catalog::{Catalog, Source};
 use crate::install::{self, Context, Item, archive};
@@ -12,7 +12,7 @@ use std::path::PathBuf;
 use yog_home::components::{Components, Installed};
 
 /// When downloads happen, as VS Installer offers it.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, yog_data::Schema)]
 #[serde(rename_all = "camelCase")]
 pub enum Mode {
     /// Each package installs as soon as it's downloaded.

@@ -4845,7 +4845,6 @@ dependencies = [
  "dirs",
  "semver",
  "serde",
- "serde_json",
  "yog-data",
  "yog-ids",
 ]
@@ -4868,7 +4867,9 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-dialog",
  "tauri-plugin-substrate",
+ "yog-data",
  "yog-home",
+ "yog-ids",
  "yog-installer-core",
 ]
 
@@ -4888,6 +4889,7 @@ dependencies = [
  "tar",
  "toml 1.1.8+spec-1.1.0",
  "ureq",
+ "yog-data",
  "yog-home",
  "yog-ids",
  "zip",

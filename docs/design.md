@@ -15,7 +15,7 @@ the editor and itself.
 | **SDKs** | Yog Mod Loader SDK (a release's source, run by its `build.sh`) | `~/.yog/sdk/loader/<version>` |
 | **Game instances** (later) | Fabric 26.2 with the Yog jar of a release | `~/.yog/instances/<loader>-<mc>` |
 
-Everything installed is listed in `~/.yog/components.json` (crate
+Everything installed is listed in `~/.yog/components.ydata` (crate
 `yog-home`, in Yog-Mod-Loader): id, version, path. Only the Installer
 writes it. `yog run`, Yog IDLE and the Installer read it. A machine's own
 overrides — our loader checkout, a JDK of its own, the NVIDIA card — go in
@@ -57,7 +57,7 @@ what doesn't fit before installing anything.
 | `platform` | this machine's platform tag (`linux-x86_64`) |
 | `http` | GET JSON, downloads with progress, verification, cancellation |
 | `releases` | a source's versions |
-| `state` | what's installed (components.json) and what's newer |
+| `state` | what's installed (components.ydata) and what's newer |
 | `selection` | workloads + components chosen → components → changes |
 | `compat` | version requirements |
 | `install` | one change, per source kind |

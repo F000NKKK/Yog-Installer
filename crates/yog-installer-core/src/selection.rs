@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The Modify window's checkboxes.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, yog_data::Schema)]
 #[serde(rename_all = "camelCase")]
 pub struct Selection {
     pub workloads: BTreeSet<String>,

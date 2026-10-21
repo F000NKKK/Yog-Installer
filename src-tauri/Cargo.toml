@@ -18,6 +18,9 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 yog-installer-core = { workspace = true }
 yog-home = { workspace = true }
+# The pending journal.
+yog-data = { workspace = true }
+yog-ids = { workspace = true }
 substrate-platform = { workspace = true }
 tauri = { version = "2", features = [] }
 tauri-plugin-substrate = { workspace = true }

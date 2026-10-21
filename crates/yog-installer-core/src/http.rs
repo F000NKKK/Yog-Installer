@@ -61,18 +61,19 @@ fn github_token() -> Option<&'static str> {
 }
 
 /// A cached answer: its ETag and its body.
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(yog_data::Schema)]
 struct Cached {
     etag: Option<String>,
     body: String,
 }
 
 fn cache_file(url: &str) -> Option<PathBuf> {
-    Some(
-        CACHE
-            .get()?
-            .join(format!("{}.json", hex(&Sha256::digest(url.as_bytes())))),
-    )
+    Some(CACHE.get()?.join(format!(
+        "{}{}{}",
+        hex(&Sha256::digest(url.as_bytes())),
+        yog_ids::sep::EXT,
+        yog_ids::Format::Data.ext()
+    )))
 }
 
 /// `url`'s JSON.
@@ -90,8 +91,8 @@ fn github(url: &str) -> Result<String, String> {
     let file = cache_file(url);
     let cached: Option<Cached> = file
         .as_ref()
-        .and_then(|f| std::fs::read_to_string(f).ok())
-        .and_then(|t| serde_json::from_str(&t).ok());
+        .and_then(|f| std::fs::read(f).ok())
+        .and_then(|b| yog_data::read_bytes(&b).ok());
     let mut req = agent().get(url).header("Accept", GITHUB_JSON);
     if let Some(token) = github_token() {
         req = req.header("Authorization", &format!("Bearer {token}"));
@@ -119,11 +120,11 @@ fn github(url: &str) -> Result<String, String> {
         .map_err(|e| format!("{url}: {e}"))?;
     if let Some(file) = file {
         let _ = std::fs::create_dir_all(file.parent().unwrap_or(&file));
-        let _ = serde_json::to_string(&Cached {
+        let cached = Cached {
             etag,
             body: body.clone(),
-        })
-        .map(|t| std::fs::write(file, t));
+        };
+        let _ = std::fs::write(file, yog_data::to_bytes(&cached));
     }
     Ok(body)
 }

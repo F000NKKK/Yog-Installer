@@ -2,7 +2,7 @@
 //! does: started from anywhere (a download), it copies itself where it
 //! lives — Yog's home on Linux (with a desktop entry), ~/Applications on
 //! macOS; Windows' setup already put it there — records itself in
-//! `components.json`, and is started again from there. Its updates replace
+//! `components.ydata`, and is started again from there. Its updates replace
 //! that copy (`selfupdate`).
 
 use crate::install::launcher::{self, APP_EXT};
@@ -99,7 +99,7 @@ fn place_app(home: &Home, app: &Path, version: &str) -> Result<Placed, String> {
     Ok(Placed::Moved(dest))
 }
 
-/// Records the Installer at `path` in `components.json` (for Yog IDLE's Tools menu).
+/// Records the Installer at `path` in `components.ydata` (for Yog IDLE's Tools menu).
 fn record(home: &Home, version: &str, path: PathBuf) -> Result<(), String> {
     let file = home.components_file();
     let mut components = Components::read(&file)?;

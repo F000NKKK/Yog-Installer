@@ -15,9 +15,11 @@ yog-installer-core = { path = "crates/yog-installer-core" }
 # Starting programs with the system's environment (not this AppImage's), from the platform.
 substrate-platform = { path = "../Substrate-Platform" }
 tauri-plugin-substrate = { path = "../Substrate-Platform/tauri-plugin" }
-# Yog's home: what's installed (components.json) and where things go.
+# Yog's home: what's installed (components.ydata) and where things go.
 yog-home = "0.2.2"
 yog-ids = "0.2.2"
+# The Installer's own files, binary Yog Data.
+yog-data = "0.6.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 toml = "1"
