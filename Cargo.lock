@@ -5026,7 +5026,7 @@ dependencies = [
 
 [[patch.unused]]
 name = "yog-data"
-version = "0.8.1"
+version = "0.8.2"
 
 [[patch.unused]]
 name = "yog-data-derive"
@@ -5038,4 +5038,4 @@ version = "0.4.0"
 
 [[patch.unused]]
 name = "yog-ids"
-version = "0.4.0"
+version = "0.4.1"
