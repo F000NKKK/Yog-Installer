@@ -71,7 +71,7 @@ fn cache_file(url: &str) -> Option<PathBuf> {
     Some(CACHE.get()?.join(format!(
         "{}{}{}",
         hex(&Sha256::digest(url.as_bytes())),
-        yog_ids::sep::EXT,
+        yog_ids::sep::DOT,
         yog_ids::Format::Data.ext()
     )))
 }

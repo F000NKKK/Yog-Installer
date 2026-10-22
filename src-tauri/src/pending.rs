@@ -9,7 +9,7 @@ use yog_installer_core::engine::Mode;
 use yog_installer_core::selection::Selection;
 
 /// The journal, in the Installer's cache.
-const FILE: &str = yog_ids::concatcp!("pending", yog_ids::sep::EXT, yog_ids::Format::Data.ext());
+const FILE: &str = yog_ids::concatcp!("pending", yog_ids::sep::DOT, yog_ids::Format::Data.ext());
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, yog_data::Schema)]
 #[serde(rename_all = "camelCase")]
