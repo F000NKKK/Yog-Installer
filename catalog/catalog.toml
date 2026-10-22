@@ -4,7 +4,7 @@
 # says where they're published. See docs/design.md.
 
 # Bumped with every change: an Installer takes the newest of its own and the channel's.
-revision = 2
+revision = 3
 
 # ── Yog Installer itself: updated before anything else ─────────────────────
 
@@ -55,7 +55,7 @@ description = "Write, build, run and debug Yog mods in Rust: the Yog CLI, the Ru
 icon = "puzzle"
 required = ["yog.cli", "rust.toolchain"]
 recommended = ["rust.targets", "zig", "cargo-zigbuild", "yog.sdk.loader", "yog.jdk.21"]
-optional = ["yog.jdk.17", "yog.jdk.25"]
+optional = ["yog.jdk.17", "yog.jdk.25", "yog.symbols.runtime"]
 
 [[workload]]
 id = "yog.workload.loader"
@@ -64,7 +64,7 @@ description = "Work on Yog Mod Loader itself: its source and the JDK of every Mi
 icon = "layers"
 required = ["yog.sdk.loader", "rust.toolchain", "yog.jdk.17", "yog.jdk.21", "yog.jdk.25"]
 recommended = ["rust.targets", "zig", "cargo-zigbuild", "yog.cli"]
-optional = []
+optional = ["yog.symbols.runtime"]
 
 # ── Components ─────────────────────────────────────────────────────────────
 
@@ -126,6 +126,14 @@ name = "JDK 25"
 description = "Eclipse Temurin 25 — Minecraft 26.x."
 group = "java"
 source = { kind = "adoptium", major = 25 }
+
+[[component]]
+id = "yog.symbols.runtime"
+name = "Yog runtime debug symbols"
+description = "The loader runtime's debug info, split from its release: crash reports and the debugger read its code by file and line."
+group = "sdk"
+# One archive holds every platform's.
+source = { kind = "github", repo = "F000NKKK/Yog-Mod-Loader", assets = { "linux-x86_64" = "yog-runtime-symbols.zip", "linux-aarch64" = "yog-runtime-symbols.zip", "windows-x86_64" = "yog-runtime-symbols.zip", "macos-x86_64" = "yog-runtime-symbols.zip", "macos-aarch64" = "yog-runtime-symbols.zip" } }
 
 [[component]]
 id = "yog.sdk.loader"

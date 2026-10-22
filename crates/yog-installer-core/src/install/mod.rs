@@ -95,6 +95,9 @@ fn place(item: &Item, version: &str, ctx: &Context) -> Option<PathBuf> {
         (_, Source::Git { .. }) => Some(ctx.home.loader_sdk_dir(version)),
         (_, Source::Adoptium { major }) => Some(ctx.home.jdk_dir(*major, version)),
         (_, Source::Zig) => Some(ctx.home.tool_dir(ZIG, version)),
+        (Item::Component { id, .. }, Source::Github { .. }) => {
+            Some(ctx.home.component_dir(id, version))
+        }
         _ => None,
     }
 }
