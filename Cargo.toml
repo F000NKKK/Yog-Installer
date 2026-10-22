@@ -16,10 +16,10 @@ yog-installer-core = { path = "crates/yog-installer-core" }
 substrate-platform = { path = "../Substrate-Platform" }
 tauri-plugin-substrate = { path = "../Substrate-Platform/tauri-plugin" }
 # Yog's home: what's installed (components.ydata) and where things go.
-yog-home = "0.4.1"
-yog-ids = "0.4.5"
+yog-home = "0.5.0"
+yog-ids = "0.5.0"
 # The Installer's own files, binary Yog Data.
-yog-data = "0.8.3"
+yog-data = "0.9.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 toml = "1"
