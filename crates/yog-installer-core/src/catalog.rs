@@ -15,6 +15,10 @@ pub enum Source {
     Github {
         repo: String,
         assets: BTreeMap<String, String>,
+        /// A package running on the system's own libraries, taken instead
+        /// where the system has them (see [`SystemPackage`]).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        system: Option<SystemPackage>,
     },
     /// A GitHub repo's release tags, installed from the tag's source.
     Git { repo: String },
@@ -31,6 +35,35 @@ pub enum Source {
     Adoptium { major: u32 },
     /// The newest stable zig, from ziglang.org.
     Zig,
+}
+
+/// A package of a product built against the system's libraries (a Linux
+/// `.deb`'s program): the system's WebKit and GStreamer, not the older
+/// ones an AppImage carries, which break against the system's plugins
+/// (sound dying on Bluetooth outputs, no GPU compositing).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SystemPackage {
+    /// Per platform tag, the asset whose name ends so.
+    pub assets: BTreeMap<String, String>,
+    /// The libraries (sonames) the system must have for it.
+    pub needs: Vec<String>,
+}
+
+impl Source {
+    /// How the name of the asset this platform installs ends, if any: the
+    /// system package's where it fits.
+    pub fn asset_suffix(&self) -> Option<&str> {
+        let Source::Github { assets, system, .. } = self else {
+            return None;
+        };
+        let host = yog_ids::platform::host_tag();
+        system
+            .as_ref()
+            .filter(|s| crate::platform::has_libraries(&s.needs))
+            .and_then(|s| s.assets.get(&host))
+            .or_else(|| assets.get(&host))
+            .map(String::as_str)
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

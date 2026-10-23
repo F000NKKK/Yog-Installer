@@ -45,6 +45,12 @@ kind = "github"
 repo = "F000NKKK/Yog-IDLE"
 # The package each platform runs from: an asset whose name ends so.
 assets = { "linux-x86_64" = "_amd64.AppImage", "windows-x86_64" = "_x64-setup.exe", "macos-x86_64" = "_universal.app.tar.gz", "macos-aarch64" = "_universal.app.tar.gz" }
+# Where the system has WebKitGTK 4.1, its .deb's program runs on the system's
+# WebKit and GStreamer: the AppImage's older ones break against the system's
+# plugins (sound dying on Bluetooth outputs) and composite without the GPU.
+[product.source.system]
+assets = { "linux-x86_64" = "_amd64.deb" }
+needs = ["libwebkit2gtk-4.1.so.0", "libjavascriptcoregtk-4.1.so.0", "libsoup-3.0.so.0", "libgtk-3.so.0"]
 
 # ── Workloads ──────────────────────────────────────────────────────────────
 

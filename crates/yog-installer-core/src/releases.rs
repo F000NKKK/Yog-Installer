@@ -60,8 +60,8 @@ impl Release {
 /// source's asset for it (other sources always do).
 pub fn carries(source: &Source, release: &Release) -> bool {
     match source {
-        Source::Github { assets, .. } => assets
-            .get(&yog_ids::platform::host_tag())
+        Source::Github { .. } => source
+            .asset_suffix()
             .is_some_and(|suffix| release.asset_ending(suffix).is_some()),
         _ => true,
     }
@@ -269,6 +269,7 @@ mod tests {
         let source = crate::catalog::Source::Github {
             repo: "o/r".into(),
             assets,
+            system: None,
         };
         let mut r = super::Release::bare("1.0.0");
         assert!(!super::carries(&source, &r));

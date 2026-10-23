@@ -3,6 +3,7 @@
 //! rustup and cargo (`tools`).
 
 pub mod archive;
+mod deb;
 #[cfg(target_os = "macos")]
 mod debuggable;
 mod files;
@@ -72,8 +73,9 @@ impl Item<'_> {
 /// for what's installed by a tool (rustup, cargo).
 pub fn asset<'r>(item: &Item, release: &'r Release) -> Option<&'r Asset> {
     match item.source() {
-        Source::Github { assets, .. } => assets
-            .get(&yog_ids::platform::host_tag())
+        Source::Github { .. } => item
+            .source()
+            .asset_suffix()
             .and_then(|suffix| release.asset_ending(suffix)),
         Source::Git { .. } => release.asset(SOURCE_ARCHIVE),
         Source::Adoptium { .. } | Source::Zig => release.assets.first(),

@@ -12,9 +12,13 @@ const NSIS_SILENT: &str = "/S";
 const NSIS_DIR: &str = "/D=";
 /// What an NSIS setup leaves to remove it.
 const NSIS_UNINSTALL: &str = "uninstall.exe";
+/// A Debian package's name ends so; its program is in `usr/bin/`.
+const DEB_EXT: &str = ".deb";
+const DEB_BIN: [&str; 2] = ["usr", "bin"];
 
 /// Installs a product's package that isn't an archive (macOS's is, see
-/// `install::finish`): a Windows setup, a Linux AppImage; what starts it.
+/// `install::finish`): a Windows setup, a Linux AppImage or Debian
+/// package (unpacked, not installed); what starts it.
 pub fn product(
     p: &Product,
     version: &str,
@@ -34,9 +38,19 @@ pub fn product(
         run::tool(download, &args, ctx.cancel, &ctx.output(&p.id))?;
         return Ok(dir.join(platform::exe(&p.program)));
     }
-    // Linux: the AppImage itself, runnable, with a launcher entry.
-    let program = dir.join(name);
-    std::fs::copy(download, &program).map_err(|e| format!("{}: {e}", program.display()))?;
+    // Linux: the AppImage itself, runnable, or the Debian package's
+    // program; with a launcher entry.
+    let program = if name.ends_with(DEB_EXT) {
+        super::deb::unpack(download, &dir, ctx.cancel)?;
+        DEB_BIN
+            .iter()
+            .fold(dir.clone(), |d, part| d.join(part))
+            .join(&p.program)
+    } else {
+        let program = dir.join(name);
+        std::fs::copy(download, &program).map_err(|e| format!("{}: {e}", program.display()))?;
+        program
+    };
     make_executable(&program)?;
     // Its icon for the desktop entry; an entry without one is still fine.
     let icon = p
