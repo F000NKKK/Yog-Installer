@@ -1,7 +1,6 @@
 //! A source's published versions, newest first, with the files each has.
 
-use crate::catalog::Source;
-use crate::{http, platform};
+use crate::sources::catalog::Source;
 use serde::{Deserialize, Serialize};
 
 /// Releases looked at in a GitHub repo (its newest).
@@ -104,7 +103,7 @@ struct GhAsset {
 /// A repo's published releases (`source`: with the tag's source archive).
 fn github(repo: &str, source: bool) -> Result<Vec<Release>, String> {
     let url = format!("https://api.github.com/repos/{repo}/releases?per_page={GITHUB_PAGE}");
-    let list: Vec<GhRelease> = http::get_json(&url)?;
+    let list: Vec<GhRelease> = crate::sources::http::get_json(&url)?;
     // Pre-releases too: a beta is how a version reaches its testers (its
     // title says what it is).
     Ok(list
@@ -154,7 +153,8 @@ struct CrateVersion {
 }
 
 fn crates_io(name: &str) -> Result<Vec<Release>, String> {
-    let all: CratesIo = http::get_json(&format!("https://crates.io/api/v1/crates/{name}"))?;
+    let all: CratesIo =
+        crate::sources::http::get_json(&format!("https://crates.io/api/v1/crates/{name}"))?;
     Ok(all
         .versions
         .into_iter()
@@ -189,11 +189,12 @@ struct AdoptiumVersion {
 
 /// The newest Temurin JDK of `major` for this machine.
 fn adoptium(major: u32) -> Result<Vec<Release>, String> {
-    let (os, arch) = platform::adoptium().ok_or("Adoptium has no JDK for this platform")?;
+    let (os, arch) =
+        crate::machine::platform::adoptium().ok_or("Adoptium has no JDK for this platform")?;
     let url = format!(
         "https://api.adoptium.net/v3/assets/latest/{major}/hotspot?os={os}&architecture={arch}&image_type=jdk"
     );
-    let list: Vec<AdoptiumAsset> = http::get_json(&url)?;
+    let list: Vec<AdoptiumAsset> = crate::sources::http::get_json(&url)?;
     Ok(list
         .into_iter()
         .map(|a| {
@@ -224,8 +225,8 @@ struct ZigBuild {
 /// The stable zig releases for this machine, newest first.
 fn zig() -> Result<Vec<Release>, String> {
     let index: serde_json::Map<String, serde_json::Value> =
-        http::get_json("https://ziglang.org/download/index.json")?;
-    let host = platform::zig();
+        crate::sources::http::get_json("https://ziglang.org/download/index.json")?;
+    let host = crate::machine::platform::zig();
     let mut out: Vec<Release> = index
         .into_iter()
         .filter(|(version, _)| semver::Version::parse(version).is_ok_and(|v| v.pre.is_empty()))
@@ -247,7 +248,7 @@ fn zig() -> Result<Vec<Release>, String> {
             })
         })
         .collect();
-    out.sort_by(|a, b| crate::compat::compare(&b.version, &a.version));
+    out.sort_by(|a, b| crate::plans::compat::compare(&b.version, &a.version));
     Ok(out)
 }
 
@@ -267,7 +268,7 @@ mod tests {
         let assets = [(yog_ids::platform::host_tag(), suffix.clone())]
             .into_iter()
             .collect();
-        let source = crate::catalog::Source::Github {
+        let source = crate::sources::catalog::Source::Github {
             repo: "o/r".into(),
             assets,
             system: None,

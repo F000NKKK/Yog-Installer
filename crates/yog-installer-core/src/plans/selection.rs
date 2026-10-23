@@ -1,8 +1,8 @@
 //! What's chosen in the Modify window — workloads, their recommended and
 //! optional parts, individual components — and what installing it changes.
 
-use crate::catalog::Catalog;
-use crate::detect::Found;
+use crate::machine::detect::Found;
+use crate::sources::catalog::Catalog;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -166,13 +166,12 @@ pub fn changes(
                 id,
                 version: to.clone(),
             }),
-            Some(f) if f.managed && crate::compat::compare(to, &f.version).is_gt() => {
-                out.push(Change::Update {
+            Some(f) if f.managed && crate::plans::compat::compare(to, &f.version).is_gt() => out
+                .push(Change::Update {
                     id,
                     from: f.version.clone(),
                     to: to.clone(),
-                })
-            }
+                }),
             Some(_) => {}
         }
     }

@@ -2,7 +2,7 @@
 //! unpacked while it arrives; never outside the folder they go into,
 //! optionally without the one folder they're all in.
 
-use crate::progress::Cancel;
+use crate::plans::progress::Cancel;
 use std::io::Read;
 use std::path::{Component, Path, PathBuf};
 

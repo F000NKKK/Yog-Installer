@@ -1,8 +1,7 @@
 //! The channel: the newest catalog — the one built in, or the one the
 //! latest Yog Installer release carries (cached), whichever is newer.
 
-use crate::catalog::Catalog;
-use crate::{http, releases};
+use crate::sources::catalog::Catalog;
 use yog_home::Home;
 
 /// The asset an Installer release carries its catalog in.
@@ -33,13 +32,16 @@ fn refresh(built_in: &Catalog, cached: &std::path::Path) -> Result<(), String> {
     let Some(installer) = &built_in.installer else {
         return Ok(());
     };
-    let Some(latest) = releases::of(&installer.source)?.into_iter().next() else {
+    let Some(latest) = crate::sources::releases::of(&installer.source)?
+        .into_iter()
+        .next()
+    else {
         return Ok(());
     };
     let Some(asset) = latest.asset(CATALOG_ASSET) else {
         return Ok(());
     };
-    let text = http::get_text(&asset.url)?;
+    let text = crate::sources::http::get_text(&asset.url)?;
     Catalog::parse(&text)?;
     if let Some(dir) = cached.parent() {
         std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;

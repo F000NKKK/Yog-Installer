@@ -2,8 +2,7 @@
 //! what was there before it — rustup's toolchains, `cargo install`ed tools,
 //! the system's JDKs, a zig on `PATH`. Only reads.
 
-use crate::catalog::{Catalog, Source};
-use crate::platform;
+use crate::sources::catalog::{Catalog, Source};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 use yog_home::components::Components;
@@ -108,14 +107,17 @@ fn on_system(source: &Source, system: &dyn System) -> Option<(String, Option<Pat
     let bin = cargo_bin(system);
     match source {
         Source::Rustup { toolchain } => {
-            let list = system.run(&bin.join(platform::exe("rustup")), &["toolchain", "list"])?;
+            let list = system.run(
+                &bin.join(crate::machine::platform::exe("rustup")),
+                &["toolchain", "list"],
+            )?;
             list.lines()
                 .any(|l| l.starts_with(&format!("{toolchain}-")))
                 .then(|| (toolchain.clone(), None))
         }
         Source::RustTargets { toolchain, targets } => {
             let list = system.run(
-                &bin.join(platform::exe("rustup")),
+                &bin.join(crate::machine::platform::exe("rustup")),
                 &["target", "list", "--installed", "--toolchain", toolchain],
             )?;
             targets
@@ -124,12 +126,19 @@ fn on_system(source: &Source, system: &dyn System) -> Option<(String, Option<Pat
                 .then(|| (toolchain.clone(), None))
         }
         Source::Crate { name } => {
-            let list = system.run(&bin.join(platform::exe("cargo")), &["install", "--list"])?;
-            crate_version(&list, name).map(|v| (v, Some(bin.join(platform::exe(name)))))
+            let list = system.run(
+                &bin.join(crate::machine::platform::exe("cargo")),
+                &["install", "--list"],
+            )?;
+            crate_version(&list, name)
+                .map(|v| (v, Some(bin.join(crate::machine::platform::exe(name)))))
         }
         Source::Adoptium { major } => system_jdk(*major, system).map(|(v, p)| (v, Some(p))),
         Source::Zig => {
-            let v = system.run(Path::new(&platform::exe("zig")), &["version"])?;
+            let v = system.run(
+                Path::new(&crate::machine::platform::exe("zig")),
+                &["version"],
+            )?;
             Some((v.trim().to_string(), None))
         }
         Source::Github { .. } | Source::Git { .. } => None,
@@ -167,7 +176,7 @@ fn system_jdk(major: u32, system: &dyn System) -> Option<(String, PathBuf)> {
         .flat_map(|h| [h.join("Contents/Home"), h])
         .filter_map(|h| Some((jdk_version(&system.read(&h.join("release"))?)?, h)))
         .filter(|(v, _)| v.split('.').next().and_then(|m| m.parse().ok()) == Some(major))
-        .max_by(|a, b| crate::compat::compare(&a.0, &b.0))
+        .max_by(|a, b| crate::plans::compat::compare(&a.0, &b.0))
 }
 
 /// The version in a JDK's `release` file (`JAVA_VERSION="21.0.5"`).
@@ -213,11 +222,11 @@ mod tests {
     fn finds_what_was_there_before() {
         let mut sys = Fake::default();
         sys.runs.insert(
-            format!("{} toolchain list", platform::exe("rustup")),
+            format!("{} toolchain list", crate::machine::platform::exe("rustup")),
             "1.99-x86_64-unknown-linux-gnu (default)\n".into(),
         );
         sys.runs.insert(
-            format!("{} install --list", platform::exe("cargo")),
+            format!("{} install --list", crate::machine::platform::exe("cargo")),
             "cargo-zigbuild v0.20.1:\n    cargo-zigbuild\nyog-cli v0.47.1:\n    yog\n".into(),
         );
         sys.dirs.insert(

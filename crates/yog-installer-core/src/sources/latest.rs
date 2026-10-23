@@ -2,8 +2,8 @@
 //! (the Installer too), asked side by side, and the developer news — the
 //! latest releases of Yog's own repos — from the same answers.
 
-use crate::catalog::{Catalog, Source};
-use crate::releases::{self, Release};
+use crate::sources::catalog::{Catalog, Source};
+use crate::sources::releases::Release;
 use serde::Serialize;
 use std::collections::BTreeMap;
 use yog_home::components::id::INSTALLER;
@@ -53,7 +53,7 @@ pub fn fetch(catalog: &Catalog) -> Latest {
         .chain(components)
         .chain(installer)
         .map(|(id, name, source)| {
-            std::thread::spawn(move || (id, name, releases::of(&source), source))
+            std::thread::spawn(move || (id, name, crate::sources::releases::of(&source), source))
         })
         .collect();
     let mut out = Latest::default();
@@ -72,7 +72,10 @@ pub fn fetch(catalog: &Catalog) -> Latest {
                 }
                 // A release without this platform's file (not built yet, or
                 // failed) isn't one to install.
-                if let Some(newest) = list.into_iter().find(|r| releases::carries(&source, r)) {
+                if let Some(newest) = list
+                    .into_iter()
+                    .find(|r| crate::sources::releases::carries(&source, r))
+                {
                     out.newest.insert(id, newest);
                 }
             }

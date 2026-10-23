@@ -1,13 +1,12 @@
 //! What the window shows: the products and their state, and for the Modify
 //! window every workload and component with what's installed and newest.
 
-use crate::catalog::Catalog;
-use crate::compat::{self, Conflict, Needs, RELEASE_MANIFEST};
-use crate::detect::Found;
-use crate::engine;
 use crate::install;
-use crate::releases::Release;
-use crate::selection::Change;
+use crate::machine::detect::Found;
+use crate::plans::compat::{Conflict, Needs, RELEASE_MANIFEST};
+use crate::plans::selection::Change;
+use crate::sources::catalog::Catalog;
+use crate::sources::releases::Release;
 use serde::Serialize;
 use std::collections::BTreeMap;
 
@@ -48,7 +47,7 @@ pub fn products(
                 description: p.description.clone(),
                 installed: have.map(|f| f.version.clone()),
                 latest: newest.map(|r| r.version.clone()),
-                update_available: matches!((have, newest), (Some(f), Some(r)) if compat::compare(&r.version, &f.version).is_gt()),
+                update_available: matches!((have, newest), (Some(f), Some(r)) if crate::plans::compat::compare(&r.version, &f.version).is_gt()),
                 notes_url: newest.and_then(|r| r.notes_url.clone()),
                 program: have.and_then(|f| f.path.as_ref()).map(|p| p.display().to_string()),
                 size: newest.and_then(|r| install::asset(&item, r)).map(|a| a.size),
@@ -106,7 +105,11 @@ pub fn components(
 
 /// What the plan's releases need of each other that the outcome won't have:
 /// each release's `yog-release.json`, against the versions there'll be.
-pub fn conflicts(catalog: &Catalog, plan: &engine::Plan, installed: &[Found]) -> Vec<Conflict> {
+pub fn conflicts(
+    catalog: &Catalog,
+    plan: &crate::plans::engine::Plan,
+    installed: &[Found],
+) -> Vec<Conflict> {
     let mut versions: BTreeMap<String, String> = installed
         .iter()
         .map(|f| (f.id.clone(), f.version.clone()))
@@ -127,14 +130,16 @@ pub fn conflicts(catalog: &Catalog, plan: &engine::Plan, installed: &[Found]) ->
     let chosen: Vec<(String, String, Needs)> = plan
         .releases
         .iter()
-        .filter(|(id, _)| engine::item(catalog, id).is_some() && versions.contains_key(*id))
+        .filter(|(id, _)| {
+            crate::plans::engine::item(catalog, id).is_some() && versions.contains_key(*id)
+        })
         .filter_map(|(id, r)| {
             let manifest = r.asset(RELEASE_MANIFEST)?;
-            let needs: Needs = crate::http::get_json(&manifest.url).ok()?;
+            let needs: Needs = crate::sources::http::get_json(&manifest.url).ok()?;
             Some((id.clone(), r.version.clone(), needs))
         })
         .collect();
-    compat::check(&chosen, &versions)
+    crate::plans::compat::check(&chosen, &versions)
 }
 
 #[cfg(test)]
@@ -146,11 +151,11 @@ mod tests {
     #[ignore]
     fn every_source_answers() {
         let catalog = Catalog::built_in();
-        let crate::latest::Latest {
+        let crate::sources::latest::Latest {
             newest: latest,
             problems,
             news,
-        } = crate::latest::fetch(&catalog);
+        } = crate::sources::latest::fetch(&catalog);
         assert!(problems.is_empty(), "{problems:?}");
         assert!(!news.is_empty());
         for c in &catalog.components {

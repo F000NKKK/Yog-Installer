@@ -3,8 +3,8 @@
 
 use super::launcher::{self, APP_EXT};
 use super::{Context, run};
-use crate::catalog::Product;
-use crate::platform;
+use crate::machine::platform;
+use crate::sources::catalog::Product;
 use std::path::{Path, PathBuf};
 
 /// A Windows (NSIS) setup's switches: silent, into a folder (last, unquoted).
@@ -56,7 +56,7 @@ pub fn product(
     let icon = p
         .icon
         .as_deref()
-        .and_then(|url| crate::http::get_bytes(url).ok())
+        .and_then(|url| crate::sources::http::get_bytes(url).ok())
         .and_then(|png| {
             let file = dir.join(launcher::ICON_FILE);
             std::fs::write(&file, png).ok().map(|_| file)

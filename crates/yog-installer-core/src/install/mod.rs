@@ -11,9 +11,9 @@ pub mod launcher;
 pub mod run;
 mod tools;
 
-use crate::catalog::{Product, Source};
-use crate::progress::{Cancel, Event, Sink};
-use crate::releases::{Asset, Release, SOURCE_ARCHIVE};
+use crate::plans::progress::{Cancel, Event, Sink};
+use crate::sources::catalog::{Product, Source};
+use crate::sources::releases::{Asset, Release, SOURCE_ARCHIVE};
 use archive::Kind;
 use std::path::{Path, PathBuf};
 

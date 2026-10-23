@@ -4,7 +4,7 @@
 //! rustc) is paused and stopped with it; elsewhere a pause waits for the
 //! step to end.
 
-use crate::progress::{CANCELLED, Cancel};
+use crate::plans::progress::{CANCELLED, Cancel};
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::process::Stdio;

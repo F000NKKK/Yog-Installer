@@ -3,7 +3,7 @@
 //! any archive — the files it would have put under `/` land under a folder.
 
 use super::archive::{self, Kind};
-use crate::progress::Cancel;
+use crate::plans::progress::Cancel;
 use std::io::{BufReader, Read};
 use std::path::Path;
 

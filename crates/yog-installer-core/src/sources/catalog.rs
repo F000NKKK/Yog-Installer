@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
 
 /// The catalog this Installer was built with.
-pub const BUILT_IN: &str = include_str!("../../../catalog/catalog.toml");
+pub const BUILT_IN: &str = include_str!("../../../../catalog/catalog.toml");
 
 /// Where a component's versions are published, and so how it's installed.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -59,7 +59,7 @@ impl Source {
         let host = yog_ids::platform::host_tag();
         system
             .as_ref()
-            .filter(|s| crate::platform::has_libraries(&s.needs))
+            .filter(|s| crate::machine::platform::has_libraries(&s.needs))
             .and_then(|s| s.assets.get(&host))
             .or_else(|| assets.get(&host))
             .map(String::as_str)

@@ -3,8 +3,8 @@
 //! and, for whoever installs while it downloads, streamed to them as the
 //! bytes arrive.
 
-use crate::http::{agent, hex, ok};
-use crate::progress::{CANCELLED, Cancel};
+use crate::plans::progress::{CANCELLED, Cancel};
+use crate::sources::http::{agent, hex, ok};
 use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};

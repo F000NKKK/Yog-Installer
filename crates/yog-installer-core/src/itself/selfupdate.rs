@@ -2,12 +2,11 @@
 //! Studio Installer does. The new version replaces the running one, then
 //! the Installer starts again.
 
-use crate::catalog::Catalog;
-use crate::compat;
 use crate::install::archive::{self, Kind};
-use crate::progress::Cancel;
-use crate::releases::Release;
-use crate::selfinstall::APPIMAGE_ENV;
+use crate::itself::selfinstall::APPIMAGE_ENV;
+use crate::plans::progress::Cancel;
+use crate::sources::catalog::Catalog;
+use crate::sources::releases::Release;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use yog_home::components::id::INSTALLER;
@@ -15,11 +14,11 @@ use yog_home::components::id::INSTALLER;
 /// A Windows (NSIS) setup's silent switch.
 const NSIS_SILENT: &str = "/S";
 
-/// The newest Installer in `newest` (`latest::fetch`), if it's newer than `current`.
+/// The newest Installer in `newest` (`crate::sources::latest::fetch`), if it's newer than `current`.
 pub fn newer<'r>(newest: &'r BTreeMap<String, Release>, current: &str) -> Option<&'r Release> {
     newest
         .get(INSTALLER)
-        .filter(|r| compat::compare(&r.version, current).is_gt())
+        .filter(|r| crate::plans::compat::compare(&r.version, current).is_gt())
 }
 
 /// What to do once the new version is in place.
@@ -42,7 +41,7 @@ pub fn apply(
         .installer
         .as_ref()
         .ok_or("no Installer in the catalog")?;
-    let crate::catalog::Source::Github { assets, .. } = &installer.source else {
+    let crate::sources::catalog::Source::Github { assets, .. } = &installer.source else {
         return Err("the Installer isn't a GitHub release".into());
     };
     let suffix = assets
@@ -52,7 +51,7 @@ pub fn apply(
         .asset_ending(suffix)
         .ok_or("the release has no Installer for this platform")?;
     let download = cache.join(&asset.name);
-    crate::download::download(
+    crate::sources::download::download(
         &asset.url,
         &download,
         asset.sha256.as_deref(),

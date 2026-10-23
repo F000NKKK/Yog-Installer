@@ -1,11 +1,11 @@
 //! Carrying out a plan: each change downloaded, installed and recorded in
 //! `components.ydata`, with progress events, until it's done, fails or is cancelled.
 
-use crate::catalog::{Catalog, Source};
 use crate::install::{self, Context, Item, archive};
-use crate::progress::{CANCELLED, Event};
-use crate::releases::Release;
-use crate::selection::Change;
+use crate::plans::progress::{CANCELLED, Event};
+use crate::plans::selection::Change;
+use crate::sources::catalog::{Catalog, Source};
+use crate::sources::releases::Release;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -217,7 +217,7 @@ fn stream_in(
     };
     let unpack_into =
         |pipe| archive::unpack_stream(pipe, unpack.kind, &unpack.staging, unpack.strip, ctx.cancel);
-    crate::download::stream(
+    crate::sources::download::stream(
         &asset.url,
         &dest,
         asset.sha256.as_deref(),
@@ -266,7 +266,7 @@ fn download(
             total,
         })
     };
-    crate::download::download(
+    crate::sources::download::download(
         &asset.url,
         &dest,
         asset.sha256.as_deref(),

@@ -1,5 +1,5 @@
 //! HTTPS: JSON and text from APIs (GitHub's cached, with its token when
-//! there is one). Files are [`crate::download`]'s.
+//! there is one). Files are [`crate::sources::download`]'s.
 
 use serde::de::DeserializeOwned;
 use sha2::{Digest, Sha256};
@@ -49,10 +49,11 @@ fn github_token() -> Option<&'static str> {
                 .ok()
                 .filter(|t| !t.is_empty())
                 .or_else(|| {
-                    let out = substrate_platform::process::command(crate::platform::exe("gh"))
-                        .args(["auth", "token"])
-                        .output()
-                        .ok()?;
+                    let out =
+                        substrate_platform::process::command(crate::machine::platform::exe("gh"))
+                            .args(["auth", "token"])
+                            .output()
+                            .ok()?;
                     let token = String::from_utf8(out.stdout).ok()?.trim().to_string();
                     (out.status.success() && !token.is_empty()).then_some(token)
                 })

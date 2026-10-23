@@ -3,19 +3,14 @@
 //! selection changes, whether it all fits together, and installing it.
 //! See `docs/design.md`.
 
-pub mod catalog;
-pub mod channel;
-pub mod compat;
-pub mod detect;
-pub mod download;
-pub mod engine;
-pub mod http;
+mod itself;
+mod machine;
+mod plans;
+mod sources;
+
+pub use itself::{selfinstall, selfupdate};
+pub use machine::{detect, platform};
+pub use plans::{compat, engine, overview, progress, selection};
+pub use sources::{catalog, channel, download, http, latest, releases};
+
 pub mod install;
-pub mod latest;
-pub mod overview;
-pub mod platform;
-pub mod progress;
-pub mod releases;
-pub mod selection;
-pub mod selfinstall;
-pub mod selfupdate;
