@@ -4820,13 +4820,29 @@ name = "yog-codegen"
 version = "0.1.0"
 
 [[package]]
+name = "yog-codegen-java"
+version = "0.1.0"
+dependencies = [
+ "yog-codegen",
+]
+
+[[package]]
+name = "yog-codegen-typescript"
+version = "0.1.0"
+dependencies = [
+ "yog-codegen",
+]
+
+[[package]]
 name = "yog-data"
-version = "0.9.1"
+version = "0.10.0"
 dependencies = [
  "base64 0.23.1",
  "bumpalo",
  "serde_spanned 1.1.2",
  "toml 1.1.8+spec-1.1.0",
+ "yog-codegen",
+ "yog-codegen-typescript",
  "yog-data-derive",
  "yog-ids",
  "yog-logging",
@@ -4835,7 +4851,7 @@ dependencies = [
 
 [[package]]
 name = "yog-data-derive"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "proc-macro-crate 3.5.0",
  "proc-macro2",
@@ -4857,10 +4873,12 @@ dependencies = [
 
 [[package]]
 name = "yog-ids"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "const_format",
  "yog-codegen",
+ "yog-codegen-java",
+ "yog-codegen-typescript",
 ]
 
 [[package]]
@@ -4874,6 +4892,8 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-dialog",
  "tauri-plugin-substrate",
+ "yog-codegen",
+ "yog-codegen-typescript",
  "yog-data",
  "yog-home",
  "yog-ids",

@@ -13,6 +13,8 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 substrate-platform = { workspace = true }
+yog-codegen = { workspace = true }
+yog-codegen-typescript = { workspace = true }
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
