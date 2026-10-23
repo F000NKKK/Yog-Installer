@@ -3,6 +3,8 @@
 //! rustup and cargo (`tools`).
 
 pub mod archive;
+#[cfg(target_os = "macos")]
+mod debuggable;
 mod files;
 pub mod launcher;
 pub mod run;
@@ -141,11 +143,14 @@ pub fn finish(
         }
         Item::Component { .. } => {
             let mac_jdk_home = dest.join("Contents").join("Home");
-            Ok(if mac_jdk_home.is_dir() {
-                mac_jdk_home
-            } else {
-                dest
-            })
+            if !mac_jdk_home.is_dir() {
+                return Ok(dest);
+            }
+            #[cfg(target_os = "macos")]
+            if matches!(item.source(), Source::Adoptium { .. }) {
+                debuggable::allow_debugging(&mac_jdk_home, item.id(), ctx)?;
+            }
+            Ok(mac_jdk_home)
         }
     }
 }
