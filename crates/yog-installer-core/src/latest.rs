@@ -70,7 +70,9 @@ pub fn fetch(catalog: &Catalog) -> Latest {
                             url: r.notes_url.clone(),
                         }));
                 }
-                if let Some(newest) = list.into_iter().next() {
+                // A release without this platform's file (not built yet, or
+                // failed) isn't one to install.
+                if let Some(newest) = list.into_iter().find(|r| releases::carries(&source, r)) {
                     out.newest.insert(id, newest);
                 }
             }

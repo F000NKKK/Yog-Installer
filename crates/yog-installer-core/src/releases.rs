@@ -56,6 +56,17 @@ impl Release {
     }
 }
 
+/// Whether `release` of `source` has what this platform installs: a GitHub
+/// source's asset for it (other sources always do).
+pub fn carries(source: &Source, release: &Release) -> bool {
+    match source {
+        Source::Github { assets, .. } => assets
+            .get(&yog_ids::platform::host_tag())
+            .is_some_and(|suffix| release.asset_ending(suffix).is_some()),
+        _ => true,
+    }
+}
+
 /// `source`'s versions, newest first.
 pub fn of(source: &Source) -> Result<Vec<Release>, String> {
     match source {
@@ -247,5 +258,26 @@ mod tests {
             "tarball_url": null, "draft": true, "prerelease": false, "assets": []}]"#;
         let read: Vec<super::GhRelease> = serde_json::from_str(draft).unwrap();
         assert!(read[0].draft && read[0].tarball_url.is_none());
+    }
+
+    #[test]
+    fn a_release_without_this_platforms_file_isnt_one_to_install() {
+        let suffix = "symbols.zip".to_owned();
+        let assets = [(yog_ids::platform::host_tag(), suffix.clone())]
+            .into_iter()
+            .collect();
+        let source = crate::catalog::Source::Github {
+            repo: "o/r".into(),
+            assets,
+        };
+        let mut r = super::Release::bare("1.0.0");
+        assert!(!super::carries(&source, &r));
+        r.assets.push(super::Asset {
+            name: format!("yog-runtime-{suffix}"),
+            url: String::new(),
+            size: 0,
+            sha256: None,
+        });
+        assert!(super::carries(&source, &r));
     }
 }
