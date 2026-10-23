@@ -90,7 +90,6 @@ struct GhRelease {
     /// None for a draft (seen with a token).
     tarball_url: Option<String>,
     draft: bool,
-    prerelease: bool,
     assets: Vec<GhAsset>,
 }
 
@@ -106,9 +105,11 @@ struct GhAsset {
 fn github(repo: &str, source: bool) -> Result<Vec<Release>, String> {
     let url = format!("https://api.github.com/repos/{repo}/releases?per_page={GITHUB_PAGE}");
     let list: Vec<GhRelease> = http::get_json(&url)?;
+    // Pre-releases too: a beta is how a version reaches its testers (its
+    // title says what it is).
     Ok(list
         .into_iter()
-        .filter(|r| !r.draft && !r.prerelease)
+        .filter(|r| !r.draft)
         .map(|r| {
             let mut assets: Vec<Asset> = r
                 .assets
