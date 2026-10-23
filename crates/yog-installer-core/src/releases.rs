@@ -76,7 +76,8 @@ struct GhRelease {
     name: Option<String>,
     published_at: Option<String>,
     html_url: String,
-    tarball_url: String,
+    /// None for a draft (seen with a token).
+    tarball_url: Option<String>,
     draft: bool,
     prerelease: bool,
     assets: Vec<GhAsset>,
@@ -110,10 +111,10 @@ fn github(repo: &str, source: bool) -> Result<Vec<Release>, String> {
                     size: a.size,
                 })
                 .collect();
-            if source {
+            if source && let Some(url) = r.tarball_url {
                 assets.push(Asset {
                     name: SOURCE_ARCHIVE.into(),
-                    url: r.tarball_url,
+                    url,
                     size: 0,
                     sha256: None,
                 });
@@ -236,4 +237,15 @@ fn zig() -> Result<Vec<Release>, String> {
         .collect();
     out.sort_by(|a, b| crate::compat::compare(&b.version, &a.version));
     Ok(out)
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn a_draft_without_a_source_archive_reads() {
+        let draft = r#"[{"tag_name": "v2.2.0", "name": null, "published_at": null, "html_url": "u",
+            "tarball_url": null, "draft": true, "prerelease": false, "assets": []}]"#;
+        let read: Vec<super::GhRelease> = serde_json::from_str(draft).unwrap();
+        assert!(read[0].draft && read[0].tarball_url.is_none());
+    }
 }
