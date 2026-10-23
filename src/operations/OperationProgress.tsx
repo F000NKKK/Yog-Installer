@@ -1,5 +1,5 @@
 import { Button, ProgressBar, useT } from "substrate-platform-ui";
-import { formatBytes } from "./format";
+import { formatBytes } from "../format";
 import type { Operation } from "./useOperation";
 
 /** A running operation inside its product's card, as Visual Studio Installer shows it. */

@@ -2,12 +2,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, DialogHost, NotificationHost, Tab, confirmDialog, notify, useLocale, useT } from "substrate-platform-ui";
 import { api, type Product, type Selection, type Snapshot } from "./api";
 import { ModifyWindow, type ModifySettings } from "./modify/ModifyWindow";
-import { NewsPanel } from "./NewsPanel";
-import { ProductCard } from "./ProductCard";
-import { SelfUpdateDialog } from "./SelfUpdateDialog";
+import { NewsPanel } from "./home/NewsPanel";
+import { ProductCard } from "./home/ProductCard";
+import { SelfUpdateDialog } from "./operations/SelfUpdateDialog";
 import { TitleBar } from "./TitleBar";
 import { usePersisted } from "./usePersisted";
-import { useOperation } from "./useOperation";
+import { useOperation } from "./operations/useOperation";
 import "./App.css";
 
 type Page = "installed" | "available";

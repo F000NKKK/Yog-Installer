@@ -1,5 +1,5 @@
 import { WindowControls, useT } from "substrate-platform-ui";
-import { Notifications } from "./Notifications";
+import { Notifications } from "./home/Notifications";
 
 /** The window's own title bar: its name, the notifications, the window buttons. */
 export function TitleBar({ notifications }: { notifications: string[] }) {

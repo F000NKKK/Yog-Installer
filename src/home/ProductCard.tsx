@@ -1,8 +1,8 @@
 import { Button, ContextMenu, Icon, useContextMenu, openLink, useT } from "substrate-platform-ui";
-import type { Product } from "./api";
-import { formatBytes } from "./format";
-import type { Operation } from "./useOperation";
-import { OperationProgress } from "./OperationProgress";
+import type { Product } from "../api";
+import { formatBytes } from "../format";
+import type { Operation } from "../operations/useOperation";
+import { OperationProgress } from "../operations/OperationProgress";
 
 export interface ProductActions {
   onModify: () => void;

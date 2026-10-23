@@ -1,5 +1,5 @@
 import { openLink, useT } from "substrate-platform-ui";
-import type { News } from "./api";
+import type { News } from "../api";
 
 /** Where "Need help?" leads. */
 const HELP_LINKS = [

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { api, type ProgressEvent } from "./api";
+import { api, type ProgressEvent } from "../api";
 
 /** A running (or just ended) operation, as a product card shows it. */
 export interface Operation {

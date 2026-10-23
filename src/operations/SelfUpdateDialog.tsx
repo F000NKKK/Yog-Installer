@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button, ProgressBar, notify, useT } from "substrate-platform-ui";
-import { api, type SelfUpdateProgress } from "./api";
-import { formatBytes } from "./format";
+import { api, type SelfUpdateProgress } from "../api";
+import { formatBytes } from "../format";
 
 /**
  * "The Installer needs to be updated", as Visual Studio Installer asks it
