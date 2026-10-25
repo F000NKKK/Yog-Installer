@@ -86,6 +86,19 @@ pub fn remove_product(
     remove_dir(dir)
 }
 
+/// Every version folder beside `keep` (a product's version folder) removed.
+pub fn remove_other_versions(keep: &Path) -> Result<(), String> {
+    let Some(Ok(entries)) = keep.parent().map(std::fs::read_dir) else {
+        return Ok(());
+    };
+    for dir in entries.flatten().map(|e| e.path()) {
+        if dir.is_dir() && dir != keep {
+            remove_dir(&dir)?;
+        }
+    }
+    Ok(())
+}
+
 /// Removes `dir` and all in it, when it's there.
 pub fn remove_dir(dir: &Path) -> Result<(), String> {
     match std::fs::remove_dir_all(dir) {

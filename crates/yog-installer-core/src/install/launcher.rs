@@ -44,12 +44,45 @@ pub fn add(
         "[Desktop Entry]\nType=Application\nName={name}\nComment={comment}\nExec=\"{}\" %U\n{icon}Terminal=false\nCategories=Development;\n",
         program.display()
     );
-    std::fs::write(&entry, text).map_err(|e| format!("{}: {e}", entry.display()))
+    std::fs::write(&entry, text).map_err(|e| format!("{}: {e}", entry.display()))?;
+    refresh(dir_of(&entry));
+    Ok(())
+}
+
+/// The folder an entry is in.
+fn dir_of(entry: &Path) -> &Path {
+    entry.parent().unwrap_or(entry)
+}
+
+/// The tools desktops read their entries' cache again with: the entries'
+/// database, KDE's (Plasma 6, Plasma 5). Without it a desktop may start an
+/// entry's old program — one an update removed.
+const REFRESH: [(&str, &[&str]); 3] = [
+    ("update-desktop-database", &[]),
+    ("kbuildsycoca6", &[]),
+    ("kbuildsycoca5", &[]),
+];
+
+/// The desktop's caches of entries read again from `dir`; the tools this
+/// desktop hasn't got are passed over.
+fn refresh(dir: &Path) {
+    for (tool, args) in REFRESH {
+        let mut cmd = std::process::Command::new(tool);
+        cmd.args(args);
+        if tool == REFRESH[0].0 {
+            cmd.arg(dir);
+        }
+        let _ = cmd
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status();
+    }
 }
 
 pub fn remove(id: &str) {
     if let Some(entry) = desktop_entry(id) {
-        let _ = std::fs::remove_file(entry);
+        let _ = std::fs::remove_file(&entry);
+        refresh(dir_of(&entry));
     }
 }
 

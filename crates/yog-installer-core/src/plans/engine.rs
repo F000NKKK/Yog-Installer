@@ -126,7 +126,7 @@ fn run(
                     None => install::install(&the, release, download.as_deref(), ctx)?,
                 };
                 if let Change::Update { from, .. } = change {
-                    replace_old(&the, &mut components, id, from, &path, ctx)?;
+                    replace_old(&the, &mut components, (from, version), &path, ctx)?;
                 }
                 components.put(Installed {
                     id: id.to_string(),
@@ -159,16 +159,17 @@ fn run(
     Ok(())
 }
 
-/// After an update: the old version's files go (unless the new one is in the
-/// same place — a tool replaced in place), and its record.
+/// After an update `from` → `to`: the old version's files go (unless the
+/// new one is in the same place — a tool replaced in place), and its record;
+/// a product's every other version too (one an older update left behind).
 fn replace_old(
     the: &Item,
     components: &mut Components,
-    id: &str,
-    from: &str,
+    (from, to): (&str, &str),
     new: &PathBuf,
     ctx: &Context,
 ) -> Result<(), String> {
+    let id = the.id();
     let old = components
         .installed
         .iter()
@@ -178,7 +179,7 @@ fn replace_old(
         install::remove_replaced(the, from, &old, ctx)?;
     }
     components.remove(id, from);
-    Ok(())
+    install::remove_other_versions(the, to, ctx)
 }
 
 /// rustup and cargo keep one version of what they install: an update replaces it.

@@ -212,6 +212,14 @@ pub fn remove_replaced(
     }
 }
 
+/// Every version of product `item` but `keep` removed (none for a component).
+pub fn remove_other_versions(item: &Item, keep: &str, ctx: &Context) -> Result<(), String> {
+    match item {
+        Item::Product(p) => files::remove_other_versions(&ctx.home.product_dir(&p.id, keep)),
+        Item::Component { .. } => Ok(()),
+    }
+}
+
 /// Removes `item` at `version`, installed at `path`.
 pub fn remove(item: &Item, version: &str, path: &Path, ctx: &Context) -> Result<(), String> {
     match (item, item.source()) {
