@@ -12,7 +12,17 @@ Visual Studio Installer does for Visual Studio.
   Adoptium, ziglang.org.
 - **Compatibility**: a release's `yog-release.json` says what it needs of
   the others; a selection that doesn't fit is stopped before it installs.
-- **Updates itself** first, then the rest.
+- **Updates itself** first, then the rest; when an install is cut short (a
+  crash, a power cut), the next start offers to go on with it, and downloads
+  resume where they stopped.
+
+The components:
+
+| Group | Components |
+|---|---|
+| Compilers, build tools and runtimes | Rust toolchain, Rust targets for every platform, Zig, cargo-zigbuild, Yog CLI |
+| Java | JDK 17, 21 and 25 (Minecraft 1.19.2–1.20.1, 1.21.1, 26.2) |
+| SDKs and libraries | Yog Mod Loader SDK, Yog runtime debug symbols (for the debugger) |
 
 Everything goes under Yog's home (`~/.yog`, or `$YOG_HOME`) and is listed in
 `~/.yog/components.ydata`, which `yog run` and Yog IDLE read. A machine's own
