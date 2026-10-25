@@ -4883,7 +4883,7 @@ dependencies = [
 
 [[package]]
 name = "yog-installer"
-version = "1.3.3"
+version = "1.3.4"
 dependencies = [
  "serde",
  "serde_json",
@@ -4902,7 +4902,7 @@ dependencies = [
 
 [[package]]
 name = "yog-installer-core"
-version = "1.3.3"
+version = "1.3.4"
 dependencies = [
  "dirs",
  "flate2",
