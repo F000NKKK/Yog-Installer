@@ -12,6 +12,7 @@ yog-home = { workspace = true }
 yog-ids = { workspace = true }
 # The Installer's own files (the HTTP cache, the pending journal's parts).
 yog-data = { workspace = true }
+substrate-data = { workspace = true }
 substrate-platform = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

@@ -22,6 +22,7 @@ yog-installer-core = { workspace = true }
 yog-home = { workspace = true }
 # The pending journal.
 yog-data = { workspace = true }
+substrate-data = { workspace = true }
 yog-ids = { workspace = true }
 substrate-platform = { workspace = true }
 tauri = { version = "2", features = [] }
