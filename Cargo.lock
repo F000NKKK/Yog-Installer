@@ -530,7 +530,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d045de693cb712d0b22c6a64be5b953f67b3ce00ab5ad3dd5d8b441886ab8e1a"
 dependencies = [
  "quote",
- "syn 3.0.9",
+ "syn 2.0.119",
 ]
 
 [[package]]
@@ -837,7 +837,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -2063,7 +2063,7 @@ version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "680998035259dcfcafe653688bf2aa6d3e2dc05e98be6ab46afb089dc84f1df8"
 dependencies = [
- "proc-macro-crate 3.5.0",
+ "proc-macro-crate 1.3.1",
  "proc-macro2",
  "quote",
  "syn 2.0.119",
@@ -2735,7 +2735,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -3194,9 +3194,7 @@ dependencies = [
  "base64 0.23.1",
  "bumpalo",
  "memchr",
- "serde_spanned 1.1.2",
  "substrate-data-derive",
- "toml 1.1.8+spec-1.1.0",
 ]
 
 [[package]]
@@ -4390,7 +4388,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -4874,10 +4872,14 @@ dependencies = [
 [[package]]
 name = "yog-codegen"
 version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3aba5555dbdc5f2ab7314101e1753fab071cf7ae4f7565f5e6aebfee766d3728"
 
 [[package]]
 name = "yog-codegen-java"
 version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "82d0b976fffc24c1aae3e80cf8d25393f8940d70555cbd60a938b7d29a4701f2"
 dependencies = [
  "yog-codegen",
 ]
@@ -4885,6 +4887,8 @@ dependencies = [
 [[package]]
 name = "yog-codegen-typescript"
 version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e79c58ee6f22686e67d9944ec22d9177de56204ad125a56f5d7d33069ebf524c"
 dependencies = [
  "yog-codegen",
 ]
@@ -4892,29 +4896,52 @@ dependencies = [
 [[package]]
 name = "yog-data"
 version = "0.10.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e8763d5ae26cf403b34e8d6080878a1988332245907fa046cc632cfc36b6837"
 dependencies = [
- "substrate-data",
+ "base64 0.23.1",
+ "bumpalo",
+ "serde_spanned 1.1.2",
+ "toml 1.1.8+spec-1.1.0",
  "yog-codegen",
  "yog-codegen-typescript",
+ "yog-data-derive",
  "yog-ids",
  "yog-logging",
+ "yog-sync",
+]
+
+[[package]]
+name = "yog-data-derive"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4b4f3fc3f90792a9c8472da4d9c071e008464c451ec0c878afdda16eeff04327"
+dependencies = [
+ "proc-macro-crate 3.5.0",
+ "proc-macro2",
+ "quote",
+ "syn 3.0.9",
+ "yog-codegen",
+ "yog-ids",
 ]
 
 [[package]]
 name = "yog-home"
 version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "968a0f8bd26e9ebd49842c7295b4bd93ce5592bcb7799ba1b75f6fe3ea1655e2"
 dependencies = [
  "dirs",
  "semver",
- "substrate-data",
  "yog-data",
  "yog-ids",
- "yog-logging",
 ]
 
 [[package]]
 name = "yog-ids"
 version = "0.6.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1ee300c46069e6dba05d432bfa56da52f04927f283c3cb251f3c00aa935eff8"
 dependencies = [
  "const_format",
  "yog-codegen",
@@ -4971,6 +4998,8 @@ dependencies = [
 [[package]]
 name = "yog-logging"
 version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2998169d5822b2d40f50ef914c5bdbe3723d6511c966c605e80ea840483d7902"
 dependencies = [
  "yog-sync",
 ]
@@ -4978,6 +5007,8 @@ dependencies = [
 [[package]]
 name = "yog-sync"
 version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4c372e14360eb6d538aaa6e922656edfdb1998110f1f799dc39aff90200b5a9"
 
 [[package]]
 name = "yoke"
@@ -5100,3 +5131,23 @@ dependencies = [
  "log",
  "simd-adler32",
 ]
+
+[[patch.unused]]
+name = "yog-codegen"
+version = "0.3.0"
+
+[[patch.unused]]
+name = "yog-codegen-typescript"
+version = "0.3.0"
+
+[[patch.unused]]
+name = "yog-data"
+version = "0.12.0"
+
+[[patch.unused]]
+name = "yog-home"
+version = "0.8.0"
+
+[[patch.unused]]
+name = "yog-ids"
+version = "0.8.0"
