@@ -3190,6 +3190,7 @@ name = "substrate-platform"
 version = "0.4.0"
 dependencies = [
  "serde",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
@@ -4817,25 +4818,25 @@ dependencies = [
 
 [[package]]
 name = "yog-codegen"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "yog-codegen-java"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "yog-codegen",
 ]
 
 [[package]]
 name = "yog-codegen-typescript"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "yog-codegen",
 ]
 
 [[package]]
 name = "yog-data"
-version = "0.10.1"
+version = "0.10.2"
 dependencies = [
  "base64 0.23.1",
  "bumpalo",
@@ -4873,7 +4874,7 @@ dependencies = [
 
 [[package]]
 name = "yog-ids"
-version = "0.6.5"
+version = "0.6.9"
 dependencies = [
  "const_format",
  "yog-codegen",
