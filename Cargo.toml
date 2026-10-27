@@ -22,12 +22,14 @@ yog-ids = "0.6.3"
 yog-codegen = "0.1.0"
 yog-codegen-typescript = "0.1.0"
 # The Installer's own files, binary Yog Data.
-yog-data = "0.10.0"
+yog-data = "0.10.2"
+# What `#[derive(Schema)]` expands to.
+substrate-data = "0.2.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 toml = "1"
 # HTTPS for releases and downloads (rustls: no system OpenSSL).
-ureq = { version = "3", features = ["json"] }
+ureq = { version = "3.5", features = ["json"] }
 semver = "1"
 sha2 = "0.11"
 zip = { version = "9", default-features = false, features = ["deflate"] }
