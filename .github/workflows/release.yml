@@ -1,7 +1,8 @@
 # Builds Yog Installer for Linux, Windows and macOS and attaches the packages
 # — and the catalog, the channel installers already out there refresh from —
-# to the release of the pushed tag (v0.1.0, …). Substrate-Platform and
-# Yog-Mod-Loader are checked out next to it, as on a developer's machine.
+# to the release of the pushed tag (v0.1.0, …). Yog-Mod-Loader is checked
+# out next to it in `yog/`, Substrate-Platform beside `yog/`, as on a
+# developer's machine.
 name: Release
 
 on:
@@ -36,9 +37,11 @@ jobs:
             args: "--target universal-apple-darwin"
     runs-on: ${{ matrix.os }}
     steps:
+      # The Yog repositories in `yog/`, Substrate-Platform beside it: the
+      # layout the Installer's `../` and `../../` paths name.
       - uses: actions/checkout@v4
         with:
-          path: Yog-Installer
+          path: yog/Yog-Installer
       - uses: actions/checkout@v4
         with:
           repository: F000NKKK/Substrate-Platform
@@ -46,7 +49,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: F000NKKK/Yog-Mod-Loader
-          path: Yog-Mod-Loader
+          path: yog/Yog-Mod-Loader
 
       - name: Linux libraries
         if: runner.os == 'Linux'
@@ -59,7 +62,7 @@ jobs:
           node-version: 22
 
       - name: Rust (the toolchain rust-toolchain.toml pins)
-        working-directory: Yog-Installer
+        working-directory: yog/Yog-Installer
         shell: bash
         run: |
           rustup show active-toolchain || rustup toolchain install
@@ -70,14 +73,14 @@ jobs:
         run: npm ci
 
       - name: Yog Installer's packages
-        working-directory: Yog-Installer
+        working-directory: yog/Yog-Installer
         run: npm ci
 
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          projectPath: Yog-Installer
+          projectPath: yog/Yog-Installer
           tagName: ${{ github.ref_name }}
           releaseName: "Yog Installer ${{ github.ref_name }}"
           releaseBody: "Yog Installer — installs and updates Yog IDLE, the Yog CLI, the loader SDK, JDKs and the Rust toolchain. Download the package for your system below."
