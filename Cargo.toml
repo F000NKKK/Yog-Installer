@@ -13,8 +13,8 @@ repository = "https://github.com/F000NKKK/Yog-Installer"
 [workspace.dependencies]
 yog-installer-core = { path = "crates/yog-installer-core" }
 # Starting programs with the system's environment (not this AppImage's), from the platform.
-substrate-platform = { path = "../Substrate-Platform" }
-tauri-plugin-substrate = { path = "../Substrate-Platform/tauri-plugin" }
+substrate-platform = { path = "../../Substrate-Platform" }
+tauri-plugin-substrate = { path = "../../Substrate-Platform/tauri-plugin" }
 # Yog's home: what's installed (components.ydata) and where things go.
 yog-home = "0.6.1"
 yog-ids = "0.6.3"
@@ -45,4 +45,3 @@ yog-codegen-typescript = { path = "../Yog-Mod-Loader/rust/crates/yog-codegen-typ
 yog-home = { path = "../Yog-Mod-Loader/rust/crates/yog-home" }
 yog-ids = { path = "../Yog-Mod-Loader/rust/crates/yog-ids" }
 yog-data = { path = "../Yog-Mod-Loader/rust/crates/yog-data" }
-yog-data-derive = { path = "../Yog-Mod-Loader/rust/crates/yog-data-derive" }
