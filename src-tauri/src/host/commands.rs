@@ -1,6 +1,6 @@
 //! The Installer's commands — the window calls them as `installer.installer.<command>`.
 
-use substrate_platform::commands::Domain;
+use substrate_host_contract::commands::Domain;
 
 pub const INSTALLER: Domain = Domain {
     key: "installer",

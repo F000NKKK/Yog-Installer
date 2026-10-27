@@ -33,7 +33,7 @@ pub struct RealSystem;
 
 impl System for RealSystem {
     fn run(&self, program: &Path, args: &[&str]) -> Option<String> {
-        let out = substrate_platform::process::command(program)
+        let out = substrate_process::command(program)
             .args(args)
             .output()
             .ok()?;

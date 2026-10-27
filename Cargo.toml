@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/yog-installer-core", "src-tauri"]
 
 [workspace.package]
-version = "1.4.0"
+version = "1.4.1"
 edition = "2024"
 rust-version = "1.99"
 authors = ["F000NK"]
@@ -15,6 +15,9 @@ yog-installer-core = { path = "crates/yog-installer-core" }
 # Starting programs with the system's environment (not this AppImage's), from the platform.
 substrate-platform = { path = "../../Substrate-Platform" }
 tauri-plugin-substrate = { path = "../../Substrate-Platform/tauri-plugin" }
+# Substrate's split crates: processes, the host contract (commands, events).
+substrate-process = { path = "../../Substrate-Platform/crates/substrate-process" }
+substrate-host-contract = { path = "../../Substrate-Platform/crates/substrate-host-contract" }
 # Yog's home: what's installed (components.ydata) and where things go.
 yog-home = "0.6.1"
 yog-ids = "0.6.3"

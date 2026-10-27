@@ -376,7 +376,7 @@ pub fn launch(state: Shared<'_>, product: String) -> Result<(), String> {
 
 /// Starts `program` with the system's environment (Substrate's process helper).
 pub fn start(program: &std::path::Path) -> Result<(), String> {
-    substrate_platform::process::start(program).map_err(|m| m.to_string())
+    substrate_process::start(program).map_err(|m| m.to_string())
 }
 
 /// Updates the Installer itself, then starts the new one.

@@ -62,7 +62,7 @@ pub fn apply(
         return replace_app(&download, kind, cancel);
     }
     if cfg!(windows) {
-        substrate_platform::process::command(&download)
+        substrate_process::command(&download)
             .arg(NSIS_SILENT)
             .spawn()
             .map_err(|e| format!("{}: {e}", download.display()))?;

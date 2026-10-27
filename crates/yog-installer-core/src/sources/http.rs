@@ -50,7 +50,7 @@ fn github_token() -> Option<&'static str> {
                 .filter(|t| !t.is_empty())
                 .or_else(|| {
                     let out =
-                        substrate_platform::process::command(crate::machine::platform::exe("gh"))
+                        substrate_process::command(crate::machine::platform::exe("gh"))
                             .args(["auth", "token"])
                             .output()
                             .ok()?;

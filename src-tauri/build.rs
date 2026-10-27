@@ -25,12 +25,12 @@ fn main() {
     let text = format!(
         "{}\n{}\n{}",
         header.comment::<TypeScript>(),
-        substrate_platform::commands::typescript(
+        substrate_host_contract::commands::typescript(
             "installer",
             "The Installer's commands: `installer.installer.<command>`, for `invokeCommand`.",
             commands::ALL
         ),
-        substrate_platform::events::typescript(
+        substrate_host_contract::events::typescript(
             "events",
             "The events the Installer's backend sends its window.",
             events::ALL

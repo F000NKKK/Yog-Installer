@@ -22,7 +22,7 @@ pub fn tool(
     line: &dyn Fn(String),
 ) -> Result<(), String> {
     let name = program.display().to_string();
-    let mut command = substrate_platform::process::command(program);
+    let mut command = substrate_process::command(program);
     #[cfg(unix)]
     std::os::unix::process::CommandExt::process_group(&mut command, 0);
     let mut child = command

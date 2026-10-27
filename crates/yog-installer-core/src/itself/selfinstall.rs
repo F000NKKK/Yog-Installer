@@ -83,7 +83,7 @@ fn place_app(home: &Home, app: &Path, version: &str) -> Result<Placed, String> {
     }
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let _ = std::fs::remove_dir_all(&dest);
-    let status = substrate_platform::process::command(DITTO)
+    let status = substrate_process::command(DITTO)
         .arg(app)
         .arg(&dest)
         .status()

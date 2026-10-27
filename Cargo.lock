@@ -3212,10 +3212,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "substrate-host-contract"
+version = "0.1.0"
+dependencies = [
+ "substrate-message",
+ "substrate-platform",
+ "substrate-process",
+]
+
+[[package]]
+name = "substrate-message"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "substrate-platform"
 version = "0.4.0"
 dependencies = [
  "serde",
+ "substrate-message",
+ "substrate-process",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "substrate-process"
+version = "0.1.0"
+dependencies = [
+ "substrate-message",
  "thiserror 2.0.21",
 ]
 
@@ -3547,7 +3573,10 @@ name = "tauri-plugin-substrate"
 version = "0.1.0"
 dependencies = [
  "serde",
+ "substrate-host-contract",
+ "substrate-message",
  "substrate-platform",
+ "substrate-process",
  "tauri",
  "tauri-plugin",
 ]
@@ -4880,6 +4909,7 @@ dependencies = [
  "substrate-data",
  "yog-data",
  "yog-ids",
+ "yog-logging",
 ]
 
 [[package]]
@@ -4894,12 +4924,14 @@ dependencies = [
 
 [[package]]
 name = "yog-installer"
-version = "1.4.0"
+version = "1.4.1"
 dependencies = [
  "serde",
  "serde_json",
  "substrate-data",
+ "substrate-host-contract",
  "substrate-platform",
+ "substrate-process",
  "tauri",
  "tauri-build",
  "tauri-plugin-dialog",
@@ -4914,7 +4946,7 @@ dependencies = [
 
 [[package]]
 name = "yog-installer-core"
-version = "1.4.0"
+version = "1.4.1"
 dependencies = [
  "dirs",
  "flate2",
@@ -4926,6 +4958,7 @@ dependencies = [
  "sha2 0.11.1",
  "substrate-data",
  "substrate-platform",
+ "substrate-process",
  "tar",
  "toml 1.1.8+spec-1.1.0",
  "ureq",
