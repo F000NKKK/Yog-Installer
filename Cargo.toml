@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/yog-installer-core", "src-tauri"]
 
 [workspace.package]
-version = "1.4.1"
+version = "1.5.0"
 edition = "2024"
 rust-version = "1.99"
 authors = ["F000NK"]
@@ -23,13 +23,13 @@ tauri-plugin-substrate = "0.1.0"
 substrate-process = "0.1.0"
 substrate-host-contract = "0.1.0"
 # Yog's home: what's installed (components.ydata) and where things go.
-yog-home = "0.6.1"
-yog-ids = "0.6.3"
+yog-home = "0.10.0"
+yog-ids = "0.10.0"
 # The generated files' header, as TypeScript.
-yog-codegen = "0.1.0"
-yog-codegen-typescript = "0.1.0"
+yog-codegen = "0.5.0"
+yog-codegen-typescript = "0.5.0"
 # The Installer's own files, binary Yog Data.
-yog-data = "0.10.2"
+yog-data = "0.14.0"
 # What `#[derive(Schema)]` expands to.
 substrate-data = "0.4.0"
 serde = { version = "1", features = ["derive"] }
