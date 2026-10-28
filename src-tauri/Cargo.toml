@@ -24,7 +24,11 @@ yog-home = { workspace = true }
 yog-data = { workspace = true }
 substrate-data = { workspace = true }
 yog-ids = { workspace = true }
-substrate-platform = { workspace = true }
+substrate-lock = { workspace = true }
+substrate-workspace-domain = { workspace = true }
+substrate-workspace-fs = { workspace = true }
+substrate-state-json = { workspace = true }
+substrate-project-domain = { workspace = true }
 substrate-host-contract = { workspace = true }
 substrate-process = { workspace = true }
 tauri = { version = "2", features = [] }

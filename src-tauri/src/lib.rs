@@ -8,7 +8,7 @@ mod state;
 
 use host::commands::INSTALLER;
 use std::sync::Arc;
-use substrate_platform::sync::Locked;
+use substrate_lock::Locked;
 use tauri::Manager;
 use tauri::plugin::Builder;
 use yog_installer_core::selfinstall::{self, Placed};

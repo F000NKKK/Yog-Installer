@@ -7,7 +7,7 @@ use crate::state::AppState;
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
-use substrate_platform::sync::Locked;
+use substrate_lock::Locked;
 use tauri::{AppHandle, Emitter, State};
 use yog_installer_core::catalog::{Group, Workload};
 use yog_installer_core::compat::Conflict;

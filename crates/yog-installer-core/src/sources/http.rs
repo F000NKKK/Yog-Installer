@@ -49,11 +49,10 @@ fn github_token() -> Option<&'static str> {
                 .ok()
                 .filter(|t| !t.is_empty())
                 .or_else(|| {
-                    let out =
-                        substrate_process::command(crate::machine::platform::exe("gh"))
-                            .args(["auth", "token"])
-                            .output()
-                            .ok()?;
+                    let out = substrate_process::command(crate::machine::platform::exe("gh"))
+                        .args(["auth", "token"])
+                        .output()
+                        .ok()?;
                     let token = String::from_utf8(out.stdout).ok()?.trim().to_string();
                     (out.status.success() && !token.is_empty()).then_some(token)
                 })

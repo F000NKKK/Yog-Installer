@@ -3,7 +3,7 @@
 
 use std::collections::BTreeMap;
 use std::sync::Mutex;
-use substrate_platform::sync::Locked;
+use substrate_lock::Locked;
 use yog_home::Home;
 use yog_installer_core::catalog::Catalog;
 use yog_installer_core::detect::{self, Found, RealSystem};

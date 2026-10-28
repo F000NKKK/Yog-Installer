@@ -13,7 +13,11 @@ repository = "https://github.com/F000NKKK/Yog-Installer"
 [workspace.dependencies]
 yog-installer-core = { path = "crates/yog-installer-core" }
 # Starting programs with the system's environment (not this AppImage's), from the platform.
-substrate-platform = { path = "../../Substrate-Platform" }
+substrate-lock = { path = "../../Substrate-Platform/crates/substrate-lock" }
+substrate-workspace-domain = { path = "../../Substrate-Platform/crates/substrate-workspace-domain" }
+substrate-workspace-fs = { path = "../../Substrate-Platform/crates/substrate-workspace-fs" }
+substrate-state-json = { path = "../../Substrate-Platform/crates/substrate-state-json" }
+substrate-project-domain = { path = "../../Substrate-Platform/crates/substrate-project-domain" }
 tauri-plugin-substrate = { path = "../../Substrate-Platform/tauri-plugin" }
 # Substrate's split crates: processes, the host contract (commands, events).
 substrate-process = { path = "../../Substrate-Platform/crates/substrate-process" }
