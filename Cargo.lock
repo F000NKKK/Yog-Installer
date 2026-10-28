@@ -3303,6 +3303,12 @@ name = "substrate-lock"
 version = "0.1.0"
 
 [[package]]
+name = "substrate-lock"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0fbf0e47bc6a1fff99a95208d3c67bc7b5081995153c06844bb47c334f0d2807"
+
+[[package]]
 name = "substrate-message"
 version = "0.1.0"
 dependencies = [
@@ -3338,7 +3344,7 @@ dependencies = [
 name = "substrate-workspace-app"
 version = "0.1.0"
 dependencies = [
- "substrate-lock",
+ "substrate-lock 0.1.0",
  "substrate-workspace-domain",
 ]
 
@@ -3355,7 +3361,7 @@ name = "substrate-workspace-fs"
 version = "0.1.0"
 dependencies = [
  "notify",
- "substrate-lock",
+ "substrate-lock 0.1.0",
  "substrate-message",
  "substrate-workspace-app",
  "substrate-workspace-domain",
@@ -3691,7 +3697,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "substrate-host-contract",
- "substrate-lock",
+ "substrate-lock 0.1.0",
  "substrate-message",
  "substrate-process",
  "substrate-workspace-app",
@@ -5079,7 +5085,7 @@ dependencies = [
  "serde_json",
  "substrate-data",
  "substrate-host-contract",
- "substrate-lock",
+ "substrate-lock 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "substrate-process",
  "substrate-project-domain",
  "substrate-state-json",
@@ -5110,7 +5116,7 @@ dependencies = [
  "serde_json",
  "sha2 0.11.1",
  "substrate-data",
- "substrate-lock",
+ "substrate-lock 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "substrate-process",
  "substrate-project-domain",
  "substrate-state-json",
